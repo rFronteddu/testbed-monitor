@@ -3,7 +3,10 @@ package report
 import (
 	"fmt"
 	"google.golang.org/protobuf/proto"
+	"io"
+	"log"
 	"net"
+	"os"
 	"strings"
 	"testbed-monitor/measure"
 	"time"
@@ -74,6 +77,18 @@ func (receiver *Receiver) receive() {
 		}
 
 		fmt.Printf("Received report from %s. Report: %s\n", addr, m.String())
+
+		// new code: log report in a file
+		// name the file the date and time
+		var filename = time.Now().Format("2006-01-02_15:04:05")
+		filename += ".txt"
+		err2 := LogReport("result.txt", m.String())
+		if err2 != nil {
+			fmt.Printf("Error in LogReport: %s", err2)
+			time.Sleep(60 * time.Second)
+			log.Fatal(err)
+		}
+
 		if m.Strings == nil {
 			// some entries don't have a string map set
 			m.Strings = make(map[string]string)
@@ -82,4 +97,21 @@ func (receiver *Receiver) receive() {
 
 		receiver.measureCh <- &m
 	}
+}
+
+// LogReport This function writes data to a file
+func LogReport(filename string, data string) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+		fmt.Printf("Error creating file: %s", err)
+	}
+	defer file.Close()
+
+	_, err = io.WriteString(file, data)
+	if err != nil {
+		return err
+		fmt.Printf("Error writing data to file: %s", err)
+	}
+	return file.Sync()
 }

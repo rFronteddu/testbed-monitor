@@ -22,7 +22,7 @@ func (task *Ping) Start() {
 }
 
 func (task *Ping) execute() {
-	conn, err := grpc.Dial("192.168.101.2:8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial("192.168.56.1:8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
@@ -32,7 +32,7 @@ func (task *Ping) execute() {
 	log.Printf("Contacting server, this may take a while...")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	r, err := c.Ping(ctx, &pb.PingRequest{TargetAddress: "192.168.250.99"})
+	r, err := c.Ping(ctx, &pb.PingRequest{TargetAddress: "192.168.56.1"})
 	if err != nil {
 		// host monitor was not reachable!
 		log.Fatalf("could not greet: %v", err)

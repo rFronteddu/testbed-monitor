@@ -1,0 +1,1 @@
+subject:os strings:{key:"bootTime" value:"2022-06-04 19:56:50 -0500 CDT"} strings:{key:"host_id" value:"278148a4-83d9-4a80-9c15-3efb16b08c48"} strings:{key:"host_name" value:"DESKTOP-5JTEB5J"} strings:{key:"kernelArch" value:"x86_64"} strings:{key:"os" value:"windows"} strings:{key:"platform" value:"Microsoft Windows 10 Home"} timestamp:{seconds:1654468142}
