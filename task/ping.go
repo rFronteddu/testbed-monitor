@@ -2,6 +2,7 @@ package task
 
 import (
 	"context"
+	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
@@ -22,7 +23,7 @@ func (task *Ping) Start() {
 }
 
 func (task *Ping) execute() {
-	conn, err := grpc.Dial("192.168.56.1:8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial("127.0.0.1:8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
@@ -32,9 +33,11 @@ func (task *Ping) execute() {
 	log.Printf("Contacting server, this may take a while...")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	r, err := c.Ping(ctx, &pb.PingRequest{TargetAddress: "192.168.56.1"})
+	r, err := c.Ping(ctx, &pb.PingRequest{TargetAddress: "127.0.0.1"})
 	if err != nil {
 		// host monitor was not reachable!
+		fmt.Println("Could not reach the host!")
+		time.Sleep(60 * time.Second)
 		log.Fatalf("could not greet: %v", err)
 	}
 

@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"testbed-monitor/measure"
+	"testbed-monitor/task"
 	"time"
 )
 
@@ -39,8 +40,19 @@ func NewReportReceiver(measureCh chan *measure.Measure) (*Receiver, error) {
 
 func (receiver *Receiver) Start() {
 	fmt.Printf("Starting Report Receiver\n")
+	timeoutChan := make(chan bool, 1)
 	go func() {
 		receiver.receive()
+		timeoutChan <- false
+	}()
+
+	go func() {
+		time.Sleep(90 * time.Second)
+		timeoutChan <- true
+		fmt.Println("Haven't heard from server in a while... time to ping!")
+		pingTask := task.NewPingTask()
+		pingTask.Start()
+		// unable to ping as of 6-7-22
 	}()
 }
 
@@ -57,6 +69,7 @@ func (receiver *Receiver) receive() {
 			}
 		}
 	}()
+
 	buffer := make([]byte, 65000)
 	for {
 		n, addr, err := receiver.connection.ReadFromUDP(buffer)
@@ -78,17 +91,6 @@ func (receiver *Receiver) receive() {
 
 		fmt.Printf("Received report from %s. Report: %s\n", addr, m.String())
 
-		// new code: log report in a file
-		// name the file the date and time
-		var filename = time.Now().Format("2006-01-02_15:04:05")
-		filename += ".txt"
-		err2 := LogReport("result.txt", m.String())
-		if err2 != nil {
-			fmt.Printf("Error in LogReport: %s", err2)
-			time.Sleep(60 * time.Second)
-			log.Fatal(err)
-		}
-
 		if m.Strings == nil {
 			// some entries don't have a string map set
 			m.Strings = make(map[string]string)
@@ -96,10 +98,20 @@ func (receiver *Receiver) receive() {
 		m.Strings[SENSOR_IP] = addr.IP.String()
 
 		receiver.measureCh <- &m
+
+		var filename = time.Now().Format("2006-01-02")
+		filename += ".txt"
+		err2 := LogReport(filename, m.String())
+		if err2 != nil {
+			fmt.Printf("Error in LogReport: %s", err2)
+			time.Sleep(60 * time.Second)
+			log.Fatal(err2)
+		}
+		fmt.Printf("Report logged in %s\n", filename)
 	}
 }
 
-// LogReport This function writes data to a file
+// LogReport This function writes report data to a file
 func LogReport(filename string, data string) error {
 	file, err := os.Create(filename)
 	if err != nil {
