@@ -23,3 +23,6 @@ go.work
 # .idea files
 .idea/
 
+# txt ouput files
+*.txt
+

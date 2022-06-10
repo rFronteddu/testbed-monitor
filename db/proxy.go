@@ -73,7 +73,6 @@ func getStatusFromMeasure(ip string, old *model.HostStatus, m *measure.Measure) 
 	newStatus.Time = time.Now().Format(time.RFC1123)
 
 	newStatus.ID = ip
-	fmt.Printf("Measaure: " + m.String())
 	if cpu := int(m.Integers["CPU_AVG"]); cpu != 0 {
 		newStatus.CPUAvg = cpu
 	}
@@ -83,7 +82,6 @@ func getStatusFromMeasure(ip string, old *model.HostStatus, m *measure.Measure) 
 	if diskFree := int(m.Integers["DISK_FREE"]); diskFree != 0 {
 		newStatus.DiskFree = diskFree
 	}
-
 	if load1 := int(m.Integers["LOAD_1"]); load1 != 0 {
 		newStatus.Load1 = load1
 	}
@@ -93,14 +91,12 @@ func getStatusFromMeasure(ip string, old *model.HostStatus, m *measure.Measure) 
 	if load15 := int(m.Integers["LOAD_15"]); load15 != 0 {
 		newStatus.Load15 = load15
 	}
-
 	if usedPercent := int(m.Integers["vm_used_percent"]); usedPercent != 0 {
 		newStatus.VirtualMemoryUsagePercent = usedPercent
 	}
 	if free := int(m.Integers["vm_free"]); free != 0 {
 		newStatus.VirtualMemoryFree = free
 	}
-
 	if hostID := m.Strings["host_id"]; hostID != "" {
 		newStatus.HostID = hostID
 	}

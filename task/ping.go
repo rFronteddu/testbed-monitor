@@ -5,13 +5,18 @@ import (
 	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"io"
 	"log"
+	"os"
+	"strconv"
 	pb "testbed-monitor/pinger"
 	"time"
 )
 
 type Ping struct {
 }
+
+const HOST_IP = "127.0.0.1"
 
 func NewPingTask() *Ping {
 	task := new(Ping)
@@ -23,7 +28,7 @@ func (task *Ping) Start() {
 }
 
 func (task *Ping) execute() {
-	conn, err := grpc.Dial("127.0.0.1:8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(HOST_IP+":8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
@@ -33,17 +38,43 @@ func (task *Ping) execute() {
 	log.Printf("Contacting server, this may take a while...")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	r, err := c.Ping(ctx, &pb.PingRequest{TargetAddress: "127.0.0.1"})
+	r, err := c.Ping(ctx, &pb.PingRequest{TargetAddress: HOST_IP})
 	if err != nil {
 		// host monitor was not reachable!
 		fmt.Println("Could not reach the host!")
-		time.Sleep(60 * time.Second)
-		log.Fatalf("could not greet: %v", err)
+		var filename = time.Now().Format("2006-01-02_1504")
+		filename += "_Ping.txt"
+		err := LogPing(filename, "Could not reach the host: "+HOST_IP)
+		log.Fatalf("Could not greet: %v", err)
 	}
 
 	if r.GetReachable() {
-		log.Printf("Packet Loss: %v Rtt: %v", r.GetLostPercentage(), r.GetAvgRtt())
+		pingResponse := "Reached host: " + HOST_IP + "  Packet Loss: " + strconv.Itoa(int(r.GetLostPercentage())) + "  Rtt: " + strconv.Itoa(int(r.GetAvgRtt()))
+		var filename = time.Now().Format("2006-01-02_1504")
+		filename += "_Ping.txt"
+		LogPing(filename, pingResponse)
+		log.Printf("%s/n", pingResponse)
 	} else {
+		var filename = time.Now().Format("2006-01-02_1504")
+		filename += "_Ping.txt"
+		LogPing(filename, "Reached the host: "+HOST_IP+", but could not reach endpoint.")
 		log.Printf("Endpoint was not reachable")
 	}
+}
+
+// LogPing This function writes report data to a file
+func LogPing(filename string, data string) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+		fmt.Printf("Error creating file: %s", err)
+	}
+	defer file.Close()
+
+	_, err = io.WriteString(file, data)
+	if err != nil {
+		return err
+		fmt.Printf("Error writing data to file: %s", err)
+	}
+	return file.Sync()
 }
