@@ -39,7 +39,7 @@ func NewReportReceiver(measureCh chan *measure.Measure) (*Receiver, error) {
 }
 
 func (receiver *Receiver) Start() {
-	fmt.Printf("Starting Report Receiver\n")
+	fmt.Printf("Starting Report Receiver...\n")
 	timeoutChan := make(chan bool, 1)
 	go func() {
 		receiver.receive()
@@ -47,12 +47,11 @@ func (receiver *Receiver) Start() {
 	}()
 
 	go func() {
-		time.Sleep(90 * time.Second)
+		time.Sleep(30 * time.Minute)
 		timeoutChan <- true
-		fmt.Println("Haven't heard from server in a while... time to ping!")
+		fmt.Println("Haven't received a report in 30 minutes.")
 		pingTask := task.NewPingTask()
 		pingTask.Start()
-		// unable to ping as of 6-7-22
 	}()
 }
 
@@ -89,7 +88,7 @@ func (receiver *Receiver) receive() {
 			continue
 		}
 
-		fmt.Printf("Received report from %s. Report: %s\n", addr, m.String())
+		fmt.Printf("Received report from %s.\nReport: %s\n", addr, m.String())
 
 		if m.Strings == nil {
 			// some entries don't have a string map set
@@ -99,8 +98,8 @@ func (receiver *Receiver) receive() {
 
 		receiver.measureCh <- &m
 
-		var filename = time.Now().Format("2006-01-02")
-		filename += ".txt"
+		var filename = time.Now().Format("2006-01-02_1504")
+		filename += "_Report.txt"
 		err2 := LogReport(filename, m.String())
 		if err2 != nil {
 			fmt.Printf("Error in LogReport: %s", err2)

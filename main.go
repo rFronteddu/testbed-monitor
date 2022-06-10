@@ -58,7 +58,7 @@ func gqlServer(serveAddr string, conf generated.Config) {
 
 	router.Handle("/", playground.Handler("Testbed Manager Playground", "/query"))
 	router.Handle("/query", srv)
-	fmt.Printf("Connect to https://%s/ for playground\n", serveAddr)
+	//fmt.Printf("Connect to https://%s/ for playground\n", serveAddr)
 	err := http.ListenAndServe(serveAddr, router)
 	if err != nil {
 		panic(err)
