@@ -40,22 +40,31 @@ func NewReportReceiver(measureCh chan *measure.Measure) (*Receiver, error) {
 
 func (receiver *Receiver) Start() {
 	fmt.Printf("Starting Report Receiver...\n")
-	timeoutChan := make(chan bool, 1)
+	ticker := time.NewTicker(60 * time.Minute)
+	receivedReports := map[string]time.Time{
+		"127.0.0.1":     time.Time{},
+		"123.456.789.0": time.Time{},
+	}
 	go func() {
-		receiver.receive()
-		timeoutChan <- false
+		println("Receiving reports") //////////////////////////////
+		receiver.receive(receivedReports)
 	}()
 
 	go func() {
-		time.Sleep(30 * time.Minute)
-		timeoutChan <- true
-		fmt.Println("Haven't received a report in 30 minutes.")
-		pingTask := task.NewPingTask()
-		pingTask.Start()
+		for _ = range ticker.C {
+			println("Checking timestamps") ///////////////////////
+			for key, element := range receivedReports {
+				if time.Now().After(element.Add(60 * time.Minute)) {
+					fmt.Printf("Haven't received a report for %s in 30 minutes. Will attempt to ping.\n", key)
+					pingTask := task.NewPingTask()
+					pingTask.Start(key)
+				}
+			}
+		}
 	}()
 }
 
-func (receiver *Receiver) receive() {
+func (receiver *Receiver) receive(receivedReports map[string]time.Time) {
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Printf("Fatal error while receiving: %s, will sleep 5 seconds before attempting to proceed\n", err)
@@ -89,6 +98,7 @@ func (receiver *Receiver) receive() {
 		}
 
 		fmt.Printf("Received report from %s.\nReport: %s\n", addr, m.String())
+		receivedReports[addr.IP.String()] = time.Now()
 
 		if m.Strings == nil {
 			// some entries don't have a string map set
