@@ -46,13 +46,14 @@ func (receiver *Receiver) Start() {
 		"123.456.789.0": time.Time{},
 	}
 	go func() {
-		println("Receiving reports") //////////////////////////////
+		println("Receiving reports")
 		receiver.receive(receivedReports)
 	}()
 
 	go func() {
+		time.Sleep(60 * time.Minute)
 		for _ = range ticker.C {
-			println("Checking timestamps") ///////////////////////
+			println("Checking timestamps")
 			for key, element := range receivedReports {
 				if time.Now().After(element.Add(60 * time.Minute)) {
 					fmt.Printf("Haven't received a report for %s in 30 minutes. Will attempt to ping.\n", key)
