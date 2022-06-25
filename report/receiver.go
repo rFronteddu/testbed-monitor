@@ -7,9 +7,11 @@ import (
 	"log"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"testbed-monitor/measure"
-	"testbed-monitor/task"
+	pb "testbed-monitor/pinger"
+	"testbed-monitor/probers"
 	"time"
 )
 
@@ -40,25 +42,38 @@ func NewReportReceiver(measureCh chan *measure.Measure) (*Receiver, error) {
 
 func (receiver *Receiver) Start() {
 	fmt.Printf("Starting Report Receiver...\n")
-	ticker := time.NewTicker(60 * time.Minute)
+	ticker := time.NewTicker(60 * time.Minute) /////////////////
 	receivedReports := map[string]time.Time{
-		"127.0.0.1":     time.Time{},
-		"123.456.789.0": time.Time{},
+		"127.0.0.1": time.Time{},
+		//"123.456.789.0": time.Time{},
 	}
 	go func() {
-		println("Receiving reports")
 		receiver.receive(receivedReports)
 	}()
 
 	go func() {
 		time.Sleep(60 * time.Minute)
+		replyCh := make(chan *pb.PingReply)
+		var p *pb.PingReply
+		var pingResponse, filename string
 		for _ = range ticker.C {
-			println("Checking timestamps")
 			for key, element := range receivedReports {
 				if time.Now().After(element.Add(60 * time.Minute)) {
-					fmt.Printf("Haven't received a report for %s in 30 minutes. Will attempt to ping.\n", key)
-					pingTask := task.NewPingTask()
-					pingTask.Start(key)
+					fmt.Printf("Haven't received a report from %s in 60 minutes. Attempting to ping...\n", key)
+					filename = time.Now().Format("2006-01-02_1504") + "_Ping.txt"
+					icmp := probers.NewICMPProbe(key, replyCh)
+					icmp.Start()
+					p = <-replyCh
+					if p.Reachable == true {
+						element = time.Now()
+						pingResponse = "Tower " + key + " reached at " + element.String() + "\nLost percentage: " + strconv.Itoa(int(p.LostPercentage)) + " Avg rtt: " + strconv.Itoa(int(p.AvgRtt))
+						fmt.Printf("\nTower %s was reached at %s\n", key, element)
+						LogPingReport(filename, pingResponse)
+					} else {
+						fmt.Printf("\nTower %s is unreachable!\n", key)
+						pingResponse = "Tower " + key + "is unreachable at " + element.String()
+						LogPingReport(filename, pingResponse)
+					}
 				}
 			}
 		}
@@ -123,6 +138,23 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time) {
 
 // LogReport This function writes report data to a file
 func LogReport(filename string, data string) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+		fmt.Printf("Error creating file: %s", err)
+	}
+	defer file.Close()
+
+	_, err = io.WriteString(file, data)
+	if err != nil {
+		return err
+		fmt.Printf("Error writing data to file: %s", err)
+	}
+	return file.Sync()
+}
+
+// LogPingReport This function writes report data to a file
+func LogPingReport(filename string, data string) error {
 	file, err := os.Create(filename)
 	if err != nil {
 		return err
