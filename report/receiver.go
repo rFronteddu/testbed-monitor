@@ -124,8 +124,7 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time) {
 
 		receiver.measureCh <- &m
 
-		var filename = time.Now().Format("2006-01-02_1504")
-		filename += "_Report.txt"
+		var filename = time.Now().Format("2006-01-02_1504") + "_Report.txt"
 		err2 := LogReport(filename, m.String())
 		if err2 != nil {
 			fmt.Printf("Error in LogReport: %s", err2)
@@ -140,15 +139,15 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time) {
 func LogReport(filename string, data string) error {
 	file, err := os.Create(filename)
 	if err != nil {
-		return err
 		fmt.Printf("Error creating file: %s", err)
+		return err
 	}
 	defer file.Close()
 
 	_, err = io.WriteString(file, data)
 	if err != nil {
-		return err
 		fmt.Printf("Error writing data to file: %s", err)
+		return err
 	}
 	return file.Sync()
 }
@@ -157,15 +156,15 @@ func LogReport(filename string, data string) error {
 func LogPingReport(filename string, data string) error {
 	file, err := os.Create(filename)
 	if err != nil {
-		return err
 		fmt.Printf("Error creating file: %s", err)
+		return err
 	}
 	defer file.Close()
 
 	_, err = io.WriteString(file, data)
 	if err != nil {
-		return err
 		fmt.Printf("Error writing data to file: %s", err)
+		return err
 	}
 	return file.Sync()
 }
