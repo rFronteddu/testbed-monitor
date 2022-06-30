@@ -16,18 +16,16 @@ import (
 type Ping struct {
 }
 
-const HOST_IP = "127.0.0.1"
-
 func NewPingTask() *Ping {
 	task := new(Ping)
 	return task
 }
 
-func (task *Ping) Start() {
-	go task.execute()
+func (task *Ping) Start(HOST_IP string) {
+	go task.execute(HOST_IP)
 }
 
-func (task *Ping) execute() {
+func (task *Ping) execute(HOST_IP string) {
 	conn, err := grpc.Dial(HOST_IP+":8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
