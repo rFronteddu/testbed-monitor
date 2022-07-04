@@ -20,7 +20,8 @@ func main() {
 	generatedConf, resolver := graph.NewResolver()
 
 	measureCh := make(chan *measure.Measure)
-	receiver, err := report.NewReportReceiver(measureCh)
+	sendCh := make(chan *report.StatusReport)
+	receiver, err := report.NewReportReceiver(measureCh, sendCh)
 	if err != nil {
 		fmt.Printf("Fatal error %s while creating the report.Receiver, aborting\n", err)
 	}
