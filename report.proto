@@ -9,11 +9,11 @@ option go_package = "/report";
 message StatusReport {
     string towerIP = 1; // measure.Strings["host_name"]
     string lastArduinoReachableTimestamp = 2; // time.Now().Add(measure.Strings["LastArduinoReachableTimestamp"]).String()
-    string lastTowerReachableTimestamp = 3; // testbed-monitor/report/receiver.go/receivedReports
+    string lastTowerReachableTimestamp = 3; // testbed-monitor/report/receiver.go/receivedReports[ip]
     string bootTimestamp = 4; // measure.Strings["bootTime"]
-    int32 rebootsCurrentDay = 5; // ???
+    int64 rebootsCurrentDay = 5; // measure.Integers["Reboots_Today"]
     int64 lastRamReadMB = 6; // (1-measure.Integers["vm_used_percent"])*measure.Integers["vm_free"]
     int64 lastDiskReadGB = 7; // measure.Integers["DISK_USAGE"]
-    int32 lasCPUAvg = 8; // measure.Integers["CPU_AVG"]
+    int64 lastCPUAvg = 8; // measure.Integers["CPU_AVG"]
     google.protobuf.Timestamp timestamp = 9; //the time when this measure was collected
 }
