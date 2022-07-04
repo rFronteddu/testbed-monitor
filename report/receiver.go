@@ -23,11 +23,13 @@ type Receiver struct {
 	target     string
 	connection *net.UDPConn
 	measureCh  chan *measure.Measure
+	sendCh     chan *StatusReport
 }
 
-func NewReportReceiver(measureCh chan *measure.Measure) (*Receiver, error) {
+func NewReportReceiver(measureCh chan *measure.Measure, sendCh chan *StatusReport) (*Receiver, error) {
 	receiver := new(Receiver)
 	receiver.measureCh = measureCh
+	receiver.sendCh = sendCh
 	s, err := net.ResolveUDPAddr("udp4", ":8758")
 	if err != nil {
 		return nil, err
@@ -42,7 +44,7 @@ func NewReportReceiver(measureCh chan *measure.Measure) (*Receiver, error) {
 
 func (receiver *Receiver) Start() {
 	fmt.Printf("Starting Report Receiver...\n")
-	ticker := time.NewTicker(60 * time.Minute) /////////////////
+	ticker := time.NewTicker(60 * time.Minute)
 	receivedReports := map[string]time.Time{
 		"127.0.0.1": time.Time{},
 		//"123.456.789.0": time.Time{},
@@ -131,7 +133,6 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time) {
 			time.Sleep(60 * time.Second)
 			log.Fatal(err2)
 		}
-		fmt.Printf("Report logged in %s\n", filename)
 	}
 }
 
@@ -149,6 +150,7 @@ func LogReport(filename string, data string) error {
 		fmt.Printf("Error writing data to file: %s", err)
 		return err
 	}
+	fmt.Printf("Report logged in %s\n", filename)
 	return file.Sync()
 }
 
