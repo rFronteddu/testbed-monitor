@@ -51,12 +51,15 @@ type ComplexityRoot struct {
 		HostName                  func(childComplexity int) int
 		ID                        func(childComplexity int) int
 		Kernel                    func(childComplexity int) int
+		LastBoardReachable        func(childComplexity int) int
+		LastTowerReachable        func(childComplexity int) int
 		Load1                     func(childComplexity int) int
 		Load15                    func(childComplexity int) int
 		Load5                     func(childComplexity int) int
 		Os                        func(childComplexity int) int
 		Platform                  func(childComplexity int) int
 		Reachable                 func(childComplexity int) int
+		RebootsToday              func(childComplexity int) int
 		Time                      func(childComplexity int) int
 		VirtualMemoryFree         func(childComplexity int) int
 		VirtualMemoryUsagePercent func(childComplexity int) int
@@ -142,6 +145,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.HostStatus.Kernel(childComplexity), true
 
+	case "HostStatus.last_board_reachable":
+		if e.complexity.HostStatus.LastBoardReachable == nil {
+			break
+		}
+
+		return e.complexity.HostStatus.LastBoardReachable(childComplexity), true
+
+	case "HostStatus.last_tower_reachable":
+		if e.complexity.HostStatus.LastTowerReachable == nil {
+			break
+		}
+
+		return e.complexity.HostStatus.LastTowerReachable(childComplexity), true
+
 	case "HostStatus.load_1":
 		if e.complexity.HostStatus.Load1 == nil {
 			break
@@ -183,6 +200,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.HostStatus.Reachable(childComplexity), true
+
+	case "HostStatus.reboots_today":
+		if e.complexity.HostStatus.RebootsToday == nil {
+			break
+		}
+
+		return e.complexity.HostStatus.RebootsToday(childComplexity), true
 
 	case "HostStatus.time":
 		if e.complexity.HostStatus.Time == nil {
@@ -262,9 +286,8 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "graph/schema.graphqls", Input: `# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
+	{Name: "graph/schema.graphqls", Input: `# GraphQL schema
+# Update this file, then run  go run github.com/99designs/gqlgen generate
 
 type HostStatus {
   id: ID!
@@ -284,6 +307,9 @@ type HostStatus {
   load_15: Int!
   virtual_memory_free: Int!
   virtual_memory_usage_percent: Int!
+  last_tower_reachable: String!
+  last_board_reachable: String!
+  reboots_today: Int!
 }
 
 type Query {
@@ -929,6 +955,111 @@ func (ec *executionContext) _HostStatus_virtual_memory_usage_percent(ctx context
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.VirtualMemoryUsagePercent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _HostStatus_last_tower_reachable(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "HostStatus",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastTowerReachable, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _HostStatus_last_board_reachable(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "HostStatus",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastBoardReachable, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _HostStatus_reboots_today(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "HostStatus",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RebootsToday, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2418,6 +2549,36 @@ func (ec *executionContext) _HostStatus(ctx context.Context, sel ast.SelectionSe
 		case "virtual_memory_usage_percent":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._HostStatus_virtual_memory_usage_percent(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "last_tower_reachable":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._HostStatus_last_tower_reachable(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "last_board_reachable":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._HostStatus_last_board_reachable(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "reboots_today":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._HostStatus_reboots_today(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
