@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/smtp"
-	"time"
 )
 
 const MIME = "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
@@ -17,21 +16,17 @@ type Request struct {
 	body    string
 }
 
-type Mailer struct {
-	inCh chan *StatusReport
-}
-
-func NewMailer(inCh chan *StatusReport) *Mailer {
-	mailer := new(Mailer)
-	mailer.inCh = inCh
-	return mailer
-}
-
-func (mailer *Mailer) Start() {
-	go func() {
-		mailer.Mail()
-		time.Sleep(10 * time.Minute)
-	}()
+type TemplateData struct {
+	Name                          string
+	TowerIP                       string
+	LastArduinoReachableTimestamp string
+	LastTowerReachableTimestamp   string
+	BootTimestamp                 string
+	RebootsCurrentDay             string
+	LastRamReadMB                 string
+	LastDiskReadGB                string
+	LastCPUAvg                    string
+	Timestamp                     string
 }
 
 func NewRequest(to []string, subject, body string) *Request {
@@ -69,18 +64,11 @@ func (r *Request) ParseTemplate(templateFileName string, data interface{}) error
 	return nil
 }
 
-func (mailer *Mailer) Mail() {
-	templateData := struct {
-		Name string
-		URL  string
-	}{
-		Name: "CB",
-		URL:  "URL",
-	}
-	r := NewRequest([]string{"christiannebarry9@gmail.com"}, "Hello World!", "Hello, World!")
+func Mail(subject string, templateData TemplateData) {
+	r := NewRequest([]string{"christiannebarry9@gmail.com"}, subject, "body")
 	if err := r.ParseTemplate("template.html", templateData); err == nil {
-		ok, _ := r.SendEmail()
-		fmt.Printf("Email sent %s", ok)
+		r.SendEmail()
+		fmt.Printf("Email sent %s\n", subject)
 	}
 
 }

@@ -23,13 +23,13 @@ type Receiver struct {
 	target     string
 	connection *net.UDPConn
 	measureCh  chan *measure.Measure
-	sendCh     chan *StatusReport
+	statusCh   chan *StatusReport
 }
 
-func NewReportReceiver(measureCh chan *measure.Measure, sendCh chan *StatusReport) (*Receiver, error) {
+func NewReportReceiver(measureCh chan *measure.Measure, statusCh chan *StatusReport) (*Receiver, error) {
 	receiver := new(Receiver)
 	receiver.measureCh = measureCh
-	receiver.sendCh = sendCh
+	receiver.statusCh = statusCh
 	s, err := net.ResolveUDPAddr("udp4", ":8758")
 	if err != nil {
 		return nil, err
@@ -42,12 +42,12 @@ func NewReportReceiver(measureCh chan *measure.Measure, sendCh chan *StatusRepor
 	return receiver, nil
 }
 
-func (receiver *Receiver) Start() {
+func (receiver *Receiver) Start(IPs []string) {
 	fmt.Printf("Starting Report Receiver...\n")
 	ticker := time.NewTicker(60 * time.Minute)
-	// Define all host IPs here
-	receivedReports := map[string]time.Time{
-		"127.0.0.1": time.Time{},
+	receivedReports := map[string]time.Time{}
+	for i := 0; i < len(IPs); i++ {
+		receivedReports[IPs[i]] = time.Time{}
 	}
 	// Go func to receive reports
 	go func() {
@@ -112,7 +112,7 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time) {
 		m := measure.Measure{}
 		err = proto.Unmarshal(buffer[0:n], &m)
 		if err != nil {
-			fmt.Printf("Fatal error %s while unmarshalling messagr from %s!\n", err, addr)
+			fmt.Printf("Fatal error %s while unmarshalling message from %s!\n", err, addr)
 			continue
 		}
 
@@ -125,19 +125,9 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time) {
 		}
 		m.Strings[SENSOR_IP] = addr.IP.String()
 
-		receiver.measureCh <- &m
-
-		status := GetStatusFromMeasure(m.Strings[SENSOR_IP], &m)
-		data, err := proto.Marshal(status)
-		if err != nil {
-			log.Fatal("Marshalling error: ", err)
-		}
-		newStatus := &StatusReport{}
-		if err := proto.Unmarshal(data, newStatus); err != nil {
-			log.Fatalln("Failed to parse message:", err)
-		}
-		//fmt.Printf("IP: %s\n", newStatus.GetTowerIP())
-		//fmt.Printf("CPU: %v\n", newStatus.GetLastCPUAvg())
+		s := &StatusReport{}
+		GetStatusFromMeasure(m.Strings[SENSOR_IP], &m, s)
+		receiver.statusCh <- s
 
 		var filename = time.Now().Format("2006-01-02_1504") + "_Report.txt"
 		err2 := LogReport(filename, m.String())
@@ -185,17 +175,14 @@ func LogPingReport(filename string, data string) error {
 }
 
 // GetStatusFromMeasure reads a Measure Report and prepares a Status Report for the app to use later
-func GetStatusFromMeasure(ip string, m *measure.Measure) *StatusReport {
-	newStatus := StatusReport{
-		TowerIP:                       ip,
-		LastArduinoReachableTimestamp: time.Now().Add(time.Duration(m.Integers["LastArduinoReachableTimestamp"])).String(),
-		LastTowerReachableTimestamp:   time.Now().String(),
-		BootTimestamp:                 m.Strings["bootTime"],
-		RebootsCurrentDay:             m.Integers["Reboots_Today"],
-		LastRamReadMB:                 (1 - m.Integers["vm_used_percent"]) * m.Integers["vm_free"],
-		LastDiskReadGB:                m.Integers["DISK_USAGE"],
-		LastCPUAvg:                    m.Integers["CPU_AVG"],
-		Timestamp:                     m.Timestamp,
-	}
-	return &newStatus
+func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport) {
+	s.TowerIP = ip
+	s.LastArduinoReachableTimestamp = time.Now().Add(time.Duration(m.Integers["LastArduinoReachableTimestamp"])).Format(time.RFC822)
+	s.LastTowerReachableTimestamp = time.Now().Format(time.RFC822)
+	s.BootTimestamp = m.Strings["bootTime"]
+	s.RebootsCurrentDay = m.Integers["Reboots_Today"]
+	s.LastRamReadMB = (100 - m.Integers["vm_used_percent"]) * m.Integers["vm_free"]
+	s.LastDiskReadGB = m.Integers["DISK_USAGE"]
+	s.LastCPUAvg = m.Integers["CPU_AVG"]
+	s.Timestamp = m.Timestamp
 }
