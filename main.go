@@ -15,26 +15,22 @@ import (
 )
 
 func main() {
-
-	/////////
 	measureCh := make(chan *measure.Measure)
-	sendCh := make(chan *report.StatusReport)
-	receiver, err := report.NewReportReceiver(measureCh, sendCh)
+	statusCh := make(chan *report.StatusReport)
+	// Define all Tower IP addresses in the array
+	towerIPs := []string{"127.0.0.1"}
+	receiver, err := report.NewReportReceiver(measureCh, statusCh)
 	if err != nil {
 		fmt.Printf("Fatal error %s while creating the report.Receiver, aborting\n", err)
 	}
-	receiver.Start()
-	//////////////
-	fmt.Println("made it to mail")
-	mailer := report.NewMailer(sendCh)
-	mailer.Start()
+	receiver.Start(towerIPs)
+	aggregate := report.NewAggregate(statusCh)
+	aggregate.Start()
 
 	//generatedConf, resolver := graph.NewResolver()
 	//proxy, _ := db.NewProxy(resolver, measureCh)
 	//proxy.Start()
-
 	//go gqlServer(":8081", generatedConf)
-
 	quitCh := make(chan int)
 	<-quitCh
 }
