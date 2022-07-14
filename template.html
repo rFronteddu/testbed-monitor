@@ -4,7 +4,6 @@
 <head>
     <meta name="viewport" content="width=device-width"/>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>Status Report for {{.TowerIP}}</title>
     <style type="text/css">
         body{
             margin: 0 auto;
@@ -31,7 +30,7 @@
 </head>
 
 <body>
-    <table bgcolor="#80DEAA" width="100%" border="2px" bordercolor="000000" cellspacing="0" cellpadding="0">
+    <table bgcolor="#80DEAA" width="80%" border="2px" bordercolor="000000" cellspacing="0" cellpadding="0">
         <tr class="header">
             <td style="padding: 10px;">
                 <u>{{ .Timestamp }} Status Report</u><br/>
@@ -40,7 +39,7 @@
         <tr class="content" bgcolor="#FFFFFF">
             <td style="padding:10px;">
                 <p>
-                    <u>Tower {{ .TowerIP }}</u><br/>
+                    <b>Tower {{ .TowerIP }}</b><br/>
                     Arduino was last reached at {{ .LastArduinoReachableTimestamp }}<br/>
                     Tower was last reached at {{ .LastTowerReachableTimestamp }}<br/>
                     Boot time was {{ .BootTimestamp }}<br/>
