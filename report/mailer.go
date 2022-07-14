@@ -38,7 +38,7 @@ func NewRequest(to []string, subject, body string) *Request {
 }
 func (r *Request) SendEmail() (bool, error) {
 	mime := MIME
-	subject := "Subject: " + r.subject + "!\n"
+	subject := "Subject: " + r.subject + "\n"
 	msg := []byte(subject + mime + "\n" + r.body)
 	addr := "smtp.gmail.com:587"
 
