@@ -1,6 +1,5 @@
-# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
+# GraphQL schema
+# Update this file, then run  go run github.com/99designs/gqlgen generate
 
 type HostStatus {
   id: ID!
@@ -20,6 +19,9 @@ type HostStatus {
   load_15: Int!
   virtual_memory_free: Int!
   virtual_memory_usage_percent: Int!
+  last_tower_reachable: String!
+  last_board_reachable: String!
+  reboots_today: Int!
 }
 
 type Query {

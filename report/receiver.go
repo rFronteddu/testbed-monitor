@@ -23,11 +23,13 @@ type Receiver struct {
 	target     string
 	connection *net.UDPConn
 	measureCh  chan *measure.Measure
+	statusCh   chan *StatusReport
 }
 
-func NewReportReceiver(measureCh chan *measure.Measure) (*Receiver, error) {
+func NewReportReceiver(measureCh chan *measure.Measure, statusCh chan *StatusReport) (*Receiver, error) {
 	receiver := new(Receiver)
 	receiver.measureCh = measureCh
+	receiver.statusCh = statusCh
 	s, err := net.ResolveUDPAddr("udp4", ":8758")
 	if err != nil {
 		return nil, err
@@ -40,17 +42,18 @@ func NewReportReceiver(measureCh chan *measure.Measure) (*Receiver, error) {
 	return receiver, nil
 }
 
-func (receiver *Receiver) Start() {
+func (receiver *Receiver) Start(IPs []string) {
 	fmt.Printf("Starting Report Receiver...\n")
-	ticker := time.NewTicker(60 * time.Minute) /////////////////
-	receivedReports := map[string]time.Time{
-		"127.0.0.1": time.Time{},
-		//"123.456.789.0": time.Time{},
+	ticker := time.NewTicker(60 * time.Minute)
+	receivedReports := map[string]time.Time{}
+	for i := 0; i < len(IPs); i++ {
+		receivedReports[IPs[i]] = time.Time{}
 	}
+	// Go func to receive reports
 	go func() {
 		receiver.receive(receivedReports)
 	}()
-
+	// Go func to ping a host when no report in 60 minutes
 	go func() {
 		time.Sleep(60 * time.Minute)
 		replyCh := make(chan *pb.PingReply)
@@ -109,7 +112,7 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time) {
 		m := measure.Measure{}
 		err = proto.Unmarshal(buffer[0:n], &m)
 		if err != nil {
-			fmt.Printf("Fatal error %s while unmarshalling messagr from %s!\n", err, addr)
+			fmt.Printf("Fatal error %s while unmarshalling message from %s!\n", err, addr)
 			continue
 		}
 
@@ -122,7 +125,9 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time) {
 		}
 		m.Strings[SENSOR_IP] = addr.IP.String()
 
-		receiver.measureCh <- &m
+		s := &StatusReport{}
+		GetStatusFromMeasure(m.Strings[SENSOR_IP], &m, s)
+		receiver.statusCh <- s
 
 		var filename = time.Now().Format("2006-01-02_1504") + "_Report.txt"
 		err2 := LogReport(filename, m.String())
@@ -131,7 +136,6 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time) {
 			time.Sleep(60 * time.Second)
 			log.Fatal(err2)
 		}
-		fmt.Printf("Report logged in %s\n", filename)
 	}
 }
 
@@ -149,6 +153,7 @@ func LogReport(filename string, data string) error {
 		fmt.Printf("Error writing data to file: %s", err)
 		return err
 	}
+	fmt.Printf("Report logged in %s\n", filename)
 	return file.Sync()
 }
 
@@ -167,4 +172,17 @@ func LogPingReport(filename string, data string) error {
 		return err
 	}
 	return file.Sync()
+}
+
+// GetStatusFromMeasure reads a Measure Report and prepares a Status Report for the app to use later
+func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport) {
+	s.TowerIP = ip
+	s.LastArduinoReachableTimestamp = time.Now().Add(time.Duration(m.Integers["LastArduinoReachableTimestamp"])).Format(time.RFC822)
+	s.LastTowerReachableTimestamp = time.Now().Format(time.RFC822)
+	s.BootTimestamp = m.Strings["bootTime"]
+	s.RebootsCurrentDay = m.Integers["Reboots_Today"]
+	s.LastRamReadMB = (100 - m.Integers["vm_used_percent"]) * m.Integers["vm_free"]
+	s.LastDiskReadGB = m.Integers["DISK_USAGE"]
+	s.LastCPUAvg = m.Integers["CPU_AVG"]
+	s.Timestamp = m.Timestamp
 }

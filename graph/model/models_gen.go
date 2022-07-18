@@ -20,4 +20,7 @@ type HostStatus struct {
 	Load15                    int    `json:"load_15"`
 	VirtualMemoryFree         int    `json:"virtual_memory_free"`
 	VirtualMemoryUsagePercent int    `json:"virtual_memory_usage_percent"`
+	LastTowerReachable        string `json:"last_tower_reachable"`
+	LastBoardReachable        string `json:"last_board_reachable"`
+	RebootsToday              int    `json:"reboots_today"`
 }
