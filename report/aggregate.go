@@ -24,8 +24,8 @@ func (aggregate *Aggregate) Start() {
 		select {
 		case <-dailyTicker.C:
 			if time.Now().Hour() == 23 { // every day at 11pm
-				Aggregator(reportAggregate, &templateData)
-				subject := "Status Report for " + templateData.TowerIP
+				DailyAggregator(reportAggregate, &templateData)
+				subject := "11pm Daily Status Report for " + templateData.TowerIP
 				Mail(subject, templateData)
 			}
 		case msg := <-aggregate.statusChan:
@@ -34,21 +34,29 @@ func (aggregate *Aggregate) Start() {
 	}
 }
 
-func Aggregator(reports map[time.Time]*StatusReport, templateData *TemplateData) {
+func DailyAggregator(reports map[time.Time]*StatusReport, templateData *TemplateData) {
 	var CPUAvg, CPUAvgCounter int64 = 0, 0
+	compareTime := time.Time{}
 	for key, element := range reports {
 		if key.Day() == time.Now().Day() {
-			templateData.TowerIP = element.TowerIP
-			templateData.LastArduinoReachableTimestamp = element.LastArduinoReachableTimestamp
-			templateData.LastTowerReachableTimestamp = element.LastTowerReachableTimestamp
-			templateData.BootTimestamp = element.BootTimestamp
-			templateData.RebootsCurrentDay = strconv.FormatInt(element.RebootsCurrentDay, 10)
-			templateData.LastRamReadMB = strconv.FormatInt(element.LastRamReadMB, 10)
-			templateData.LastDiskReadGB = strconv.FormatInt(element.LastDiskReadGB, 10)
+			if element.Timestamp.AsTime().After(compareTime) {
+				templateData.TowerIP = element.TowerIP
+				templateData.LastArduinoReachableTimestamp = element.LastArduinoReachableTimestamp
+				templateData.LastTowerReachableTimestamp = element.LastTowerReachableTimestamp
+				templateData.BootTimestamp = element.BootTimestamp
+				templateData.RebootsCurrentDay = strconv.FormatInt(element.RebootsCurrentDay, 10)
+				templateData.LastRamReadMB = strconv.FormatInt(element.LastRamReadMB, 10)
+				templateData.LastDiskReadGB = strconv.FormatInt(element.LastDiskReadGB, 10)
+				compareTime = element.Timestamp.AsTime()
+			}
+
 			CPUAvg = CPUAvg + element.LastCPUAvg
 			CPUAvgCounter++
 		}
 	}
-	CPUAvg = CPUAvg / CPUAvgCounter
+	if CPUAvgCounter > 0 {
+		CPUAvg = CPUAvg / CPUAvgCounter
+	}
 	templateData.LastCPUAvg = strconv.FormatInt(CPUAvg, 10)
+	templateData.Timestamp = time.Now().Format(time.RFC822)
 }
