@@ -181,8 +181,10 @@ func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport) {
 	s.LastTowerReachableTimestamp = time.Now().Format(time.RFC822)
 	s.BootTimestamp = m.Strings["bootTime"]
 	s.RebootsCurrentDay = m.Integers["Reboots_Today"]
-	s.LastRamReadMB = (100 - m.Integers["vm_used_percent"]) * m.Integers["vm_free"]
-	s.LastDiskReadGB = m.Integers["DISK_USAGE"]
-	s.LastCPUAvg = m.Integers["CPU_AVG"]
+	s.RAMUsed = m.Integers["vm_used"]
+	s.RAMTotal = m.Integers["vm_total"]
+	s.DiskUsed = m.Integers["DISK_USED"]
+	s.DiskTotal = m.Integers["DISK_TOTAL"]
+	s.CPUAvg = m.Integers["CPU_AVG"]
 	s.Timestamp = m.Timestamp
 }
