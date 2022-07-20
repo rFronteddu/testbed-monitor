@@ -23,10 +23,14 @@ type TemplateData struct {
 	LastTowerReachableTimestamp   string
 	BootTimestamp                 string
 	RebootsCurrentDay             string
-	LastRamReadMB                 string
-	LastDiskReadGB                string
-	LastCPUAvg                    string
+	RAMUsedAvgMB                  string
+	DiskUsedAvgGB                 string
+	CPUAvg                        string
 	Timestamp                     string
+}
+
+type Data struct {
+	IPs []TemplateData
 }
 
 func NewRequest(to []string, subject, body string) *Request {
