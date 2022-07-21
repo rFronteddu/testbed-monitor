@@ -9,36 +9,40 @@
             margin: 0 auto;
             min-width: 100%;
             font-family: sans-serif;
+            text-align: center;
         }
         table{
             margin: 50px 0 50px 0;
             width: 100%;
             table-layout: fixed;
+            background-color: black;
         }
         .header{
-            padding: 10px;
-            text-align: center;
-            text-transform: uppercase;
+            background-color: darkblue;
             font-size: 18px;
             font-weight: bold;
+            color: white;
         }
         .subheader{
-            padding: 10px;
+            background-color: white;
             text-align: center;
             font-size: 16px;
             font-weight: bold;
         }
         .content{
-            padding: 10px;
+            background-color: white;
             font-size: 14px;
+            text-align: center;
         }
     </style>
 </head>
 
 <body>
-    <table bgcolor="#80DEAA" border="2px" bordercolor="000000">
+    <table>
         <tr class="header">
-            <th colspan="8">Daily Testbed Status Report Generated For {{ .Timestamp }}</th>
+            <th colspan="8">
+                Daily Generated Testbed Status Report
+            </th>
         </tr>
         <tr class="subheader">
             <th>Tower</th>
@@ -50,7 +54,8 @@
             <th>Average Disk Usage</th>
             <th>Average CPU</th>
         </tr>
-        <tr class="content" bgcolor="#FFFFFF">
+        {{ range . }}
+        <tr class="content">
             <td>{{ .TowerIP }}</td>
             <td>{{ .LastArduinoReachableTimestamp }}</td>
             <td>{{ .LastTowerReachableTimestamp }}</td>
@@ -60,6 +65,7 @@
             <td>{{ .DiskUsedAvgGB }}</td>
             <td>{{ .CPUAvg }}</td>
         </tr>
+        {{ end }}
     </table>
 </body>
 

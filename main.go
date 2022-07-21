@@ -25,7 +25,7 @@ func main() {
 	}
 	receiver.Start(towerIPs)
 	aggregate := report.NewAggregate(statusCh)
-	aggregate.Start()
+	aggregate.Start(towerIPs)
 
 	//generatedConf, resolver := graph.NewResolver()
 	//proxy, _ := db.NewProxy(resolver, measureCh)

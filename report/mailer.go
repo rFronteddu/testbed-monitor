@@ -16,23 +16,6 @@ type Request struct {
 	body    string
 }
 
-type TemplateData struct {
-	Name                          string
-	TowerIP                       string
-	LastArduinoReachableTimestamp string
-	LastTowerReachableTimestamp   string
-	BootTimestamp                 string
-	RebootsCurrentDay             string
-	RAMUsedAvgMB                  string
-	DiskUsedAvgGB                 string
-	CPUAvg                        string
-	Timestamp                     string
-}
-
-type Data struct {
-	IPs []TemplateData
-}
-
 func NewRequest(to []string, subject, body string) *Request {
 	return &Request{
 		to:      to,
@@ -68,9 +51,9 @@ func (r *Request) ParseTemplate(templateFileName string, data interface{}) error
 	return nil
 }
 
-func Mail(subject string, templateData TemplateData) {
+func Mail(subject string, emailData []*TemplateData) {
 	r := NewRequest([]string{"christiannebarry9@gmail.com"}, subject, "body")
-	if err := r.ParseTemplate("template.html", templateData); err == nil {
+	if err := r.ParseTemplate("template.html", emailData); err == nil {
 		r.SendEmail()
 		fmt.Printf("Email sent %s\n", subject)
 	}

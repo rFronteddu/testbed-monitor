@@ -9,24 +9,42 @@ type Aggregate struct {
 	statusChan chan *StatusReport
 }
 
+type TemplateData struct {
+	Name                          string
+	TowerIP                       string
+	LastArduinoReachableTimestamp string
+	LastTowerReachableTimestamp   string
+	BootTimestamp                 string
+	RebootsCurrentDay             string
+	RAMUsedAvgMB                  string
+	DiskUsedAvgGB                 string
+	CPUAvg                        string
+	Timestamp                     string
+}
+
 func NewAggregate(statusChan chan *StatusReport) *Aggregate {
 	aggregate := new(Aggregate)
 	aggregate.statusChan = statusChan
 	return aggregate
 }
 
-var templateData TemplateData
+var aggregatedReport TemplateData
 
-func (aggregate *Aggregate) Start() {
-	dailyTicker := time.NewTicker(60 * time.Minute)
+func (aggregate *Aggregate) Start(IPs []string) {
+	var emailData []*TemplateData
+	dailyTicker := time.NewTicker(1 * time.Minute)
 	reportAggregate := make(map[time.Time]*StatusReport)
 	for {
 		select {
 		case <-dailyTicker.C:
-			if time.Now().Hour() == 23 { // 11 pm daily report
-				DailyAggregator(reportAggregate, &templateData)
-				Mail("Daily Testbed Status Report", templateData)
-			}
+			//if time.Now().Hour() == 23 { // 11 pm daily report
+			emailData = nil
+			DailyAggregator(reportAggregate, &aggregatedReport)
+			emailData = append(emailData, &aggregatedReport)
+			testData := TemplateData{"test", "test", "test", "test", "test", "test", "test", "test", "test", "test"}
+			emailData = append(emailData, &testData)
+			Mail("Daily Testbed Status Report for "+aggregatedReport.Timestamp, emailData)
+			//}
 			//if time.Now().Day() == 7 { // Sunday night weekly report
 			//	if time.Now().Hour() == 18 {
 			//		WeeklyAggregator(reportAggregate, &templateData)
