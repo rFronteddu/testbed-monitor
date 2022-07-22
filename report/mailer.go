@@ -51,7 +51,7 @@ func (r *Request) ParseTemplate(templateFileName string, data interface{}) error
 	return nil
 }
 
-func Mail(subject string, emailData []*TemplateData) {
+func Mail(subject string, emailData []TemplateData) {
 	r := NewRequest([]string{"christiannebarry9@gmail.com"}, subject, "body")
 	if err := r.ParseTemplate("template.html", emailData); err == nil {
 		r.SendEmail()

@@ -43,7 +43,6 @@ func NewReportReceiver(measureCh chan *measure.Measure, statusCh chan *StatusRep
 }
 
 func (receiver *Receiver) Start(IPs []string) {
-	fmt.Printf("Starting Report Receiver...\n")
 	ticker := time.NewTicker(60 * time.Minute)
 	receivedReports := map[string]time.Time{}
 	for i := 0; i < len(IPs); i++ {
