@@ -19,6 +19,10 @@ func main() {
 	statusCh := make(chan *report.StatusReport)
 	// Define all Tower IP addresses in the array
 	towerIPs := []string{"127.0.0.1"}
+	fmt.Println("Monitoring the following hosts...")
+	for i := 0; i < len(towerIPs); i++ {
+		fmt.Printf("%s\n", towerIPs[i])
+	}
 	receiver, err := report.NewReportReceiver(measureCh, statusCh)
 	if err != nil {
 		fmt.Printf("Fatal error %s while creating the report.Receiver, aborting\n", err)
