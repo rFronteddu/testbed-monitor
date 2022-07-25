@@ -22,6 +22,11 @@ type TemplateData struct {
 	Timestamp                     string
 }
 
+type emailTemplate struct {
+	ReportType string
+	Template   []TemplateData
+}
+
 func NewAggregate(statusChan chan *StatusReport) *Aggregate {
 	aggregate := new(Aggregate)
 	aggregate.statusChan = statusChan
@@ -29,30 +34,31 @@ func NewAggregate(statusChan chan *StatusReport) *Aggregate {
 }
 
 var aggregatedReport TemplateData
+var emailData emailTemplate
 
 func (aggregate *Aggregate) Start(IPs []string) {
-	var emailData []TemplateData
-	dailyTicker := time.NewTicker(1 * time.Minute)
+	dailyTicker := time.NewTicker(60 * time.Minute)
 	reportAggregate := make(map[time.Time]*StatusReport)
 	for {
 		select {
 		case <-dailyTicker.C:
 			if time.Now().Hour() == 23 { // 11 pm daily report
-				emailData = nil
+				emailData.Template = nil
 				if time.Now().Weekday().String() == "Sunday" { // Sunday night weekly report
 					for IP := range IPs {
 						WeeklyAggregator(reportAggregate, IPs[IP], &aggregatedReport)
-						emailData = append(emailData, aggregatedReport)
+						emailData.Template = append(emailData.Template, aggregatedReport)
 					}
+					emailData.ReportType = "Weekly"
 					Mail("Weekly Testbed Status Report for "+aggregatedReport.Timestamp, emailData)
 				} else {
 					for IP := range IPs {
 						DailyAggregator(reportAggregate, IPs[IP], &aggregatedReport)
-						emailData = append(emailData, aggregatedReport)
+						emailData.Template = append(emailData.Template, aggregatedReport)
 					}
+					emailData.ReportType = "Daily"
 					Mail("Daily Testbed Status Report for "+aggregatedReport.Timestamp, emailData)
 				}
-
 			}
 		case msg := <-aggregate.statusChan:
 			reportAggregate[time.Now()] = msg
