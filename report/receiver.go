@@ -128,7 +128,7 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time) {
 		GetStatusFromMeasure(m.Strings[SENSOR_IP], &m, s)
 		receiver.statusCh <- s
 
-		var filename = time.Now().Format("2006-01-02_1504") + "_Report.txt"
+		var filename = time.Now().Format("2006-01-02_150405") + "_Report.txt"
 		err2 := LogReport(filename, m.String())
 		if err2 != nil {
 			fmt.Printf("Error in LogReport: %s", err2)

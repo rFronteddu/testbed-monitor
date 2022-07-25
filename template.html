@@ -41,7 +41,7 @@
     <table>
         <tr class="header">
             <th colspan="8">
-                Daily Generated Testbed Status Report
+                {{ .ReportType }} Generated Testbed Status Report
             </th>
         </tr>
         <tr class="subheader">
@@ -54,7 +54,7 @@
             <th>Average Disk Usage</th>
             <th>Average CPU</th>
         </tr>
-        {{ range . }}
+        {{ range .Template }}
         <tr class="content">
             <td>{{ .TowerIP }}</td>
             <td>{{ .LastArduinoReachableTimestamp }}</td>
