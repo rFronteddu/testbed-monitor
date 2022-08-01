@@ -7,7 +7,9 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi"
 	"github.com/gorilla/websocket"
+	"github.com/joho/godotenv"
 	"github.com/rs/cors"
+	"log"
 	"net/http"
 	"testbed-monitor/graph/generated"
 	"testbed-monitor/measure"
@@ -15,10 +17,15 @@ import (
 )
 
 func main() {
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	measureCh := make(chan *measure.Measure)
 	statusCh := make(chan *report.StatusReport)
 	// Define all Tower IP addresses in the array
-	towerIPs := []string{"127.0.0.1"}
+	towerIPs := []string{"192.168.101.2"}
 	fmt.Println("Monitoring the following hosts...")
 	for i := 0; i < len(towerIPs); i++ {
 		fmt.Printf("%s\n", towerIPs[i])

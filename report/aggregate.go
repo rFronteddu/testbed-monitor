@@ -1,7 +1,9 @@
 package report
 
 import (
-	"strconv"
+	"fmt"
+	"os"
+	strconv "strconv"
 	"time"
 )
 
@@ -37,12 +39,23 @@ var aggregatedReport TemplateData
 var emailData emailTemplate
 
 func (aggregate *Aggregate) Start(IPs []string) {
-	dailyTicker := time.NewTicker(60 * time.Minute)
+	period, err := strconv.Atoi(os.Getenv("AGGREGATE_PERIOD"))
+	if err != nil {
+		fmt.Println("It was not possible to convert aggregate period: " + os.Getenv("AGGREGATE_PERIOD") + " " + err.Error())
+		return
+	}
+
+	dailyTicker := time.NewTicker(time.Duration(period) * time.Minute)
 	reportAggregate := make(map[time.Time]*StatusReport)
 	for {
 		select {
 		case <-dailyTicker.C:
-			if time.Now().Hour() == 23 { // 11 pm daily report
+			hour, err := strconv.Atoi(os.Getenv("AGGREGATE_HOUR"))
+			if err != nil {
+				fmt.Println("It was not possible to convert aggregate hour: " + os.Getenv("AGGREGATE_HOUR") + " " + err.Error())
+				break
+			}
+			if time.Now().Hour() == hour { // 11 pm daily report
 				emailData.Template = nil
 				if time.Now().Weekday().String() == "Sunday" { // Sunday night weekly report
 					for IP := range IPs {
