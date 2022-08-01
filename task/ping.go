@@ -26,7 +26,7 @@ func (task *Ping) Start(HOST_IP string) {
 }
 
 func (task *Ping) execute(HOST_IP string) {
-	conn, err := grpc.Dial(HOST_IP+":8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(HOST_IP+":"+os.Getenv("GRPC_PINGER_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}

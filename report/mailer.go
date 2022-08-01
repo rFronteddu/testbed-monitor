@@ -29,7 +29,7 @@ func (r *Request) SendEmail() (bool, error) {
 	subject := "Subject: " + r.subject + "\n"
 	msg := []byte(subject + mime + "\n" + r.body)
 
-	if err := smtp.SendMail(os.Getenv("HOST")+":"+os.Getenv("PORT"), smtp.PlainAuth("", os.Getenv("EMAIL"), os.Getenv("PASSWORD"), os.Getenv("HOST")), os.Getenv("EMAIL"), r.to, msg); err != nil {
+	if err := smtp.SendMail(os.Getenv("HOST")+":"+os.Getenv("MAIL_PORT"), smtp.PlainAuth("", os.Getenv("EMAIL"), os.Getenv("PASSWORD"), os.Getenv("HOST")), os.Getenv("EMAIL"), r.to, msg); err != nil {
 		fmt.Printf("Error sending email: %s", err)
 		return false, err
 	}

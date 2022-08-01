@@ -2,16 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/handler/transport"
-	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/go-chi/chi"
-	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
-	"github.com/rs/cors"
 	"log"
-	"net/http"
-	"testbed-monitor/graph/generated"
 	"testbed-monitor/measure"
 	"testbed-monitor/report"
 )
@@ -24,19 +16,17 @@ func main() {
 
 	measureCh := make(chan *measure.Measure)
 	statusCh := make(chan *report.StatusReport)
-	// Define all Tower IP addresses in the array
-	towerIPs := []string{"192.168.101.2"}
-	fmt.Println("Monitoring the following hosts...")
-	for i := 0; i < len(towerIPs); i++ {
-		fmt.Printf("%s\n", towerIPs[i])
-	}
+	var towers []string
+
 	receiver, err := report.NewReportReceiver(measureCh, statusCh)
 	if err != nil {
 		fmt.Printf("Fatal error %s while creating the report.Receiver, aborting\n", err)
 	}
-	receiver.Start(towerIPs)
+	fmt.Println("Starting report receiver...")
+	receiver.Start(towers)
+
 	aggregate := report.NewAggregate(statusCh)
-	aggregate.Start(towerIPs)
+	aggregate.Start(towers)
 
 	//generatedConf, resolver := graph.NewResolver()
 	//proxy, _ := db.NewProxy(resolver, measureCh)
@@ -46,32 +36,32 @@ func main() {
 	<-quitCh
 }
 
-func gqlServer(serveAddr string, conf generated.Config) {
-	router := chi.NewRouter()
-	router.Use(cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:8080", "http://localhost:3000", "*"},
-		AllowCredentials: true,
-		Debug:            false,
-	}).Handler)
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(conf))
-	srv.AddTransport(&transport.Websocket{
-		Upgrader: websocket.Upgrader{
-			CheckOrigin: func(r *http.Request) bool {
-				// Check against your desired domains here
-				fmt.Printf("Host: %s\n", r.Host)
-				//return r.Host == "http://localhost:3000"
-				return true
-			},
-			ReadBufferSize:  1024,
-			WriteBufferSize: 1024,
-		},
-	})
-
-	router.Handle("/", playground.Handler("Testbed Manager Playground", "/query"))
-	router.Handle("/query", srv)
-	fmt.Printf("Connect to https://%s/ for playground\n", serveAddr)
-	err := http.ListenAndServe(serveAddr, router)
-	if err != nil {
-		panic(err)
-	}
-}
+//func gqlServer(serveAddr string, conf generated.Config) {
+//	router := chi.NewRouter()
+//	router.Use(cors.New(cors.Options{
+//		AllowedOrigins:   []string{"http://localhost:8080", "http://localhost:3000", "*"},
+//		AllowCredentials: true,
+//		Debug:            false,
+//	}).Handler)
+//	srv := handler.NewDefaultServer(generated.NewExecutableSchema(conf))
+//	srv.AddTransport(&transport.Websocket{
+//		Upgrader: websocket.Upgrader{
+//			CheckOrigin: func(r *http.Request) bool {
+//				// Check against your desired domains here
+//				fmt.Printf("Host: %s\n", r.Host)
+//				//return r.Host == "http://localhost:3000"
+//				return true
+//			},
+//			ReadBufferSize:  1024,
+//			WriteBufferSize: 1024,
+//		},
+//	})
+//
+//	router.Handle("/", playground.Handler("Testbed Manager Playground", "/query"))
+//	router.Handle("/query", srv)
+//	fmt.Printf("Connect to https://%s/ for playground\n", serveAddr)
+//	err := http.ListenAndServe(serveAddr, router)
+//	if err != nil {
+//		panic(err)
+//	}
+//}
