@@ -43,7 +43,6 @@ func NewReportReceiver(measureCh chan *measure.Measure, statusCh chan *StatusRep
 }
 
 func (receiver *Receiver) Start(IPs []string) {
-	fmt.Printf("Starting Report Receiver...\n")
 	ticker := time.NewTicker(60 * time.Minute)
 	receivedReports := map[string]time.Time{}
 	for i := 0; i < len(IPs); i++ {
@@ -129,7 +128,7 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time) {
 		GetStatusFromMeasure(m.Strings[SENSOR_IP], &m, s)
 		receiver.statusCh <- s
 
-		var filename = time.Now().Format("2006-01-02_1504") + "_Report.txt"
+		var filename = time.Now().Format("2006-01-02_150405") + "_Report.txt"
 		err2 := LogReport(filename, m.String())
 		if err2 != nil {
 			fmt.Printf("Error in LogReport: %s", err2)
@@ -181,8 +180,10 @@ func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport) {
 	s.LastTowerReachableTimestamp = time.Now().Format(time.RFC822)
 	s.BootTimestamp = m.Strings["bootTime"]
 	s.RebootsCurrentDay = m.Integers["Reboots_Today"]
-	s.LastRamReadMB = (100 - m.Integers["vm_used_percent"]) * m.Integers["vm_free"]
-	s.LastDiskReadGB = m.Integers["DISK_USAGE"]
-	s.LastCPUAvg = m.Integers["CPU_AVG"]
+	s.RAMUsed = m.Integers["vm_used"]
+	s.RAMTotal = m.Integers["vm_total"]
+	s.DiskUsed = m.Integers["DISK_USED"]
+	s.DiskTotal = m.Integers["DISK_TOTAL"]
+	s.CPUAvg = m.Integers["CPU_AVG"]
 	s.Timestamp = m.Timestamp
 }

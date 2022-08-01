@@ -7,49 +7,65 @@
     <style type="text/css">
         body{
             margin: 0 auto;
-            padding: 0;
             min-width: 100%;
             font-family: sans-serif;
+            text-align: center;
         }
         table{
             margin: 50px 0 50px 0;
+            width: 100%;
+            table-layout: fixed;
+            background-color: black;
         }
         .header{
-            padding: 10px;
-            text-align: center;
-            text-transform: uppercase;
+            background-color: darkblue;
             font-size: 18px;
+            font-weight: bold;
+            color: white;
+        }
+        .subheader{
+            background-color: white;
+            text-align: center;
+            font-size: 16px;
             font-weight: bold;
         }
         .content{
-            height: 100px;
+            background-color: white;
             font-size: 14px;
-            line-height: 30px;
+            text-align: center;
         }
     </style>
 </head>
 
 <body>
-    <table bgcolor="#80DEAA" width="80%" border="2px" bordercolor="000000" cellspacing="0" cellpadding="0">
+    <table>
         <tr class="header">
-            <td style="padding: 10px;">
-                <u>{{ .Timestamp }} Status Report</u><br/>
-            </td>
+            <th colspan="8">
+                {{ .ReportType }} Generated Testbed Status Report
+            </th>
         </tr>
-        <tr class="content" bgcolor="#FFFFFF">
-            <td style="padding:10px;">
-                <p>
-                    <b>Tower {{ .TowerIP }}</b><br/>
-                    Arduino was last reached at {{ .LastArduinoReachableTimestamp }}<br/>
-                    Tower was last reached at {{ .LastTowerReachableTimestamp }}<br/>
-                    Boot time was {{ .BootTimestamp }}<br/>
-                    {{ .RebootsCurrentDay }} reboots today<br/>
-                    Free RAM: {{ .LastRamReadMB }} MB<br/>
-                    DISK Usage: {{ .LastDiskReadGB }} GB<br/>
-                    Average CPU: {{ .LastCPUAvg }}%<br/>
-                </p>
-            </td>
+        <tr class="subheader">
+            <th>Tower</th>
+            <th>Reached Server (.2)</th>
+            <th>Reached Board (.1)</th>
+            <th>Last Boot Time</th>
+            <th>Reboots Today</th>
+            <th>Average RAM Usage</th>
+            <th>Average Disk Usage</th>
+            <th>Average CPU</th>
         </tr>
+        {{ range .Template }}
+        <tr class="content">
+            <td>{{ .TowerIP }}</td>
+            <td>{{ .LastArduinoReachableTimestamp }}</td>
+            <td>{{ .LastTowerReachableTimestamp }}</td>
+            <td>{{ .BootTimestamp }}</td>
+            <td>{{ .RebootsCurrentDay }}</td>
+            <td>{{ .RAMUsedAvgMB }}</td>
+            <td>{{ .DiskUsedAvgGB }}</td>
+            <td>{{ .CPUAvg }}</td>
+        </tr>
+        {{ end }}
     </table>
 </body>
 

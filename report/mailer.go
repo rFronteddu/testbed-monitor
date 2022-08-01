@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/smtp"
+	"os"
 )
 
 const MIME = "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
@@ -14,19 +15,6 @@ type Request struct {
 	to      []string
 	subject string
 	body    string
-}
-
-type TemplateData struct {
-	Name                          string
-	TowerIP                       string
-	LastArduinoReachableTimestamp string
-	LastTowerReachableTimestamp   string
-	BootTimestamp                 string
-	RebootsCurrentDay             string
-	LastRamReadMB                 string
-	LastDiskReadGB                string
-	LastCPUAvg                    string
-	Timestamp                     string
 }
 
 func NewRequest(to []string, subject, body string) *Request {
@@ -40,9 +28,8 @@ func (r *Request) SendEmail() (bool, error) {
 	mime := MIME
 	subject := "Subject: " + r.subject + "\n"
 	msg := []byte(subject + mime + "\n" + r.body)
-	addr := "smtp.gmail.com:587"
 
-	if err := smtp.SendMail(addr, smtp.PlainAuth("", "testbedmonitorreports@gmail.com", "hworxdpgshqfozdv", "smtp.gmail.com"), "testbedmonitorreports@gmail.com", r.to, msg); err != nil {
+	if err := smtp.SendMail(os.Getenv("HOST")+":"+os.Getenv("PORT"), smtp.PlainAuth("", os.Getenv("EMAIL"), os.Getenv("PASSWORD"), os.Getenv("HOST")), os.Getenv("EMAIL"), r.to, msg); err != nil {
 		fmt.Printf("Error sending email: %s", err)
 		return false, err
 	}
@@ -64,11 +51,10 @@ func (r *Request) ParseTemplate(templateFileName string, data interface{}) error
 	return nil
 }
 
-func Mail(subject string, templateData TemplateData) {
-	r := NewRequest([]string{"christiannebarry9@gmail.com"}, subject, "body")
-	if err := r.ParseTemplate("template.html", templateData); err == nil {
+func Mail(subject string, emailData emailTemplate) {
+	r := NewRequest([]string{os.Getenv("DESTINATION")}, subject, "body")
+	if err := r.ParseTemplate("template.html", emailData); err == nil {
 		r.SendEmail()
 		fmt.Printf("Email sent %s\n", subject)
 	}
-
 }
