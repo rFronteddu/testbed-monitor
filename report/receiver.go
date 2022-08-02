@@ -98,6 +98,7 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time) {
 		n, addr, err := receiver.connection.ReadFromUDP(buffer)
 		if err != nil {
 			fmt.Printf("Fatal error: %s, while reading from udp connection\n", err)
+			continue
 		}
 
 		if strings.TrimSpace(string(buffer[0:n])) == "STOP" {
