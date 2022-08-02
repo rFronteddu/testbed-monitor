@@ -80,7 +80,7 @@ func (aggregate *Aggregate) Start(IPs []string) {
 }
 
 func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateData *TemplateData) {
-	var usedRAMAvg, RAMCounter, usedDiskAvg, diskCounter, CPUAvg, CPUCounter int64 = 0, 0, 0, 0, 0, 0
+	var usedRAMAvg, RAMCounter, usedDiskAvg, diskCounter, CPUAvg, CPUCounter, rebootCounter int64 = 0, 0, 0, 0, 0, 0, 0
 	var totalRAM, totalDisk int64 = 0, 0
 	compareTime := time.Time{}
 	for key, element := range reports {
@@ -90,7 +90,9 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 				templateData.LastArduinoReachableTimestamp = element.LastArduinoReachableTimestamp
 				templateData.LastTowerReachableTimestamp = element.LastTowerReachableTimestamp
 				templateData.BootTimestamp = element.BootTimestamp
-				templateData.RebootsCurrentDay = strconv.FormatInt(element.RebootsCurrentDay, 10)
+				if element.RebootsCurrentDay == 1 {
+					rebootCounter++
+				}
 				if totalRAM == 0 {
 					totalRAM = element.RAMTotal
 				}
@@ -119,11 +121,12 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 		CPUAvg = CPUAvg / CPUCounter
 	}
 	templateData.CPUAvg = strconv.FormatInt(CPUAvg, 10) + "%"
+	templateData.RebootsCurrentDay = strconv.FormatInt(rebootCounter, 10)
 	templateData.Timestamp = time.Now().Format("Jan 02 2006")
 }
 
 func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateData *TemplateData) {
-	var usedRAMAvg, RAMCounter, usedDiskAvg, diskCounter, CPUAvg, CPUCounter int64 = 0, 0, 0, 0, 0, 0
+	var usedRAMAvg, RAMCounter, usedDiskAvg, diskCounter, CPUAvg, CPUCounter, rebootCounter int64 = 0, 0, 0, 0, 0, 0, 0
 	var totalRAM, totalDisk int64 = 0, 0
 	compareTime := time.Time{}
 	for key, element := range reports {
@@ -133,7 +136,9 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateDa
 				templateData.LastArduinoReachableTimestamp = element.LastArduinoReachableTimestamp
 				templateData.LastTowerReachableTimestamp = element.LastTowerReachableTimestamp
 				templateData.BootTimestamp = element.BootTimestamp
-				templateData.RebootsCurrentDay = strconv.FormatInt(element.RebootsCurrentDay, 10)
+				if element.RebootsCurrentDay == 1 {
+					rebootCounter++
+				}
 				if totalRAM == 0 {
 					totalRAM = element.RAMTotal
 				}
@@ -162,5 +167,6 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateDa
 		CPUAvg = CPUAvg / CPUCounter
 	}
 	templateData.CPUAvg = strconv.FormatInt(CPUAvg, 10) + "%"
+	templateData.RebootsCurrentDay = strconv.FormatInt(rebootCounter, 10)
 	templateData.Timestamp = time.Now().Format("Jan 02 2006")
 }

@@ -129,7 +129,7 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers [
 		m.Strings["sensor_ip"] = addr.IP.String()
 
 		s := &StatusReport{}
-		GetStatusFromMeasure(m.Strings["sensor_ip"], &m, s)
+		GetStatusFromMeasure(m.Strings["sensor_ip"], &m, receivedReports, s)
 		receiver.statusCh <- s
 
 		var filename = time.Now().Format("2006-01-02_150405") + "_Report.txt"
@@ -178,12 +178,14 @@ func LogPingReport(filename string, data string) error {
 }
 
 // GetStatusFromMeasure reads a Measure Report and prepares a Status Report for the app to use later
-func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport) {
+func GetStatusFromMeasure(ip string, m *measure.Measure, receivedReports map[string]time.Time, s *StatusReport) {
 	s.TowerIP = ip
 	s.LastArduinoReachableTimestamp = time.Now().Add(time.Duration(m.Integers["LastArduinoReachableTimestamp"])).Format(time.RFC822)
 	s.LastTowerReachableTimestamp = time.Now().Format(time.RFC822)
 	s.BootTimestamp = m.Strings["bootTime"]
-	s.RebootsCurrentDay = m.Integers["Reboots_Today"]
+	if m.Integers["uptime"] < int64(time.Now().Sub(receivedReports[ip]).Seconds()) {
+		s.RebootsCurrentDay = 1
+	}
 	s.RAMUsed = m.Integers["vm_used"]
 	s.RAMTotal = m.Integers["vm_total"]
 	s.DiskUsed = m.Integers["DISK_USED"]
