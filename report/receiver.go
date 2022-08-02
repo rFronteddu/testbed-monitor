@@ -41,9 +41,13 @@ func NewReportReceiver(measureCh chan *measure.Measure, statusCh chan *StatusRep
 func (receiver *Receiver) Start(towers []string) {
 	ticker := time.NewTicker(60 * time.Minute)
 	receivedReports := map[string]time.Time{}
+	// Go func to receive initial handshake from tower
+	go func() {
+		receiver.handshake(towers)
+	}()
 	// Go func to receive reports
 	go func() {
-		receiver.receive(receivedReports, towers)
+		receiver.receive(receivedReports)
 	}()
 	// Go func to ping a host when no report in 60 minutes
 	go func() {
@@ -75,7 +79,7 @@ func (receiver *Receiver) Start(towers []string) {
 	}()
 }
 
-func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers []string) {
+func (receiver *Receiver) receive(receivedReports map[string]time.Time) {
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Printf("Fatal error while receiving: %s, will sleep 5 seconds before attempting to proceed\n", err)
@@ -111,17 +115,6 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers [
 		fmt.Printf("Received report from %s.\nReport: %s\n", addr, m.String())
 		receivedReports[addr.IP.String()] = time.Now()
 
-		// Check to see if this tower is new (aggregate will look at towers[])
-		towerKnown := false
-		for i := 0; i < len(towers)-1; i++ {
-			if towers[i] == addr.IP.String() {
-				towerKnown = true
-			}
-		}
-		if towerKnown == false {
-			towers = append(towers, addr.IP.String())
-		}
-
 		if m.Strings == nil {
 			// some entries don't have a string map set
 			m.Strings = make(map[string]string)
@@ -138,6 +131,47 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers [
 			fmt.Printf("Error in LogReport: %s", err2)
 			time.Sleep(60 * time.Second)
 			log.Fatal(err2)
+		}
+	}
+}
+
+func (receiver *Receiver) handshake(towers []string) {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Printf("Fatal error while receiving: %s, will sleep 5 seconds before attempting to proceed\n", err)
+			// since it will try again do not terminate
+			time.Sleep(5 * time.Second)
+		} else {
+			err := receiver.connection.Close()
+			if err != nil {
+				fmt.Printf("Fatal error: %s, while closing the udp connection\n", err)
+			}
+		}
+	}()
+
+	buffer := make([]byte, 500)
+	for {
+		n, addr, err := receiver.connection.ReadFromUDP(buffer)
+		if err != nil {
+			fmt.Printf("Fatal error: %s, while reading from udp connection\n", err)
+		}
+		hello := string(buffer[0:n])
+		if err != nil {
+			fmt.Printf("Fatal error %s while reading message from %s!\n", err, addr)
+			continue
+		}
+
+		fmt.Printf("Received handshake from %s.\nReport: %s\n", addr, hello)
+
+		// Check to see if this tower is new (aggregate will look at towers[])
+		towerKnown := false
+		for i := 0; i < len(towers)-1; i++ {
+			if towers[i] == addr.IP.String() {
+				towerKnown = true
+			}
+		}
+		if towerKnown == false {
+			towers = append(towers, addr.IP.String())
 		}
 	}
 }
