@@ -3,7 +3,7 @@ package report
 import (
 	"fmt"
 	"os"
-	strconv "strconv"
+	"strconv"
 	"time"
 )
 
@@ -38,35 +38,39 @@ func NewAggregate(statusChan chan *StatusReport) *Aggregate {
 var aggregatedReport TemplateData
 var emailData emailTemplate
 
-func (aggregate *Aggregate) Start(IPs []string) {
+func (aggregate *Aggregate) Start(IPs *[]string) {
 	period, err := strconv.Atoi(os.Getenv("AGGREGATE_PERIOD"))
 	if err != nil {
 		fmt.Println("It was not possible to convert aggregate period: " + os.Getenv("AGGREGATE_PERIOD") + " " + err.Error())
 		return
 	}
-
+	hour, err2 := strconv.Atoi(os.Getenv("AGGREGATE_HOUR"))
+	if err2 != nil {
+		fmt.Println("It was not possible to convert aggregate hour: " + os.Getenv("AGGREGATE_HOUR") + " " + err.Error())
+		return
+	}
+	fmt.Printf("Daily report will be emailed at hour %v\n", hour)
 	dailyTicker := time.NewTicker(time.Duration(period) * time.Minute)
 	reportAggregate := make(map[time.Time]*StatusReport)
+
+	var i int
+
 	for {
 		select {
 		case <-dailyTicker.C:
-			hour, err := strconv.Atoi(os.Getenv("AGGREGATE_HOUR"))
-			if err != nil {
-				fmt.Println("It was not possible to convert aggregate hour: " + os.Getenv("AGGREGATE_HOUR") + " " + err.Error())
-				break
-			}
-			if time.Now().Hour() == hour { // 11 pm daily report
+			if time.Now().Hour() == hour { // Daily report
 				emailData.Template = nil
-				if time.Now().Weekday().String() == "Sunday" { // Sunday night weekly report
-					for IP := range IPs {
-						WeeklyAggregator(reportAggregate, IPs[IP], &aggregatedReport)
+				if time.Now().Weekday().String() == "Sunday" { // Weekly report on Sundays
+					for i = 0; i < len(*IPs); i++ {
+						WeeklyAggregator(reportAggregate, (*IPs)[i], &aggregatedReport)
 						emailData.Template = append(emailData.Template, aggregatedReport)
 					}
 					emailData.ReportType = "Weekly"
 					Mail("Weekly Testbed Status Report for "+aggregatedReport.Timestamp, emailData)
 				} else {
-					for IP := range IPs {
-						DailyAggregator(reportAggregate, IPs[IP], &aggregatedReport)
+
+					for i = 0; i < 1; i++ {
+						DailyAggregator(reportAggregate, (*IPs)[i], &aggregatedReport)
 						emailData.Template = append(emailData.Template, aggregatedReport)
 					}
 					emailData.ReportType = "Daily"

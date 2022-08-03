@@ -5,10 +5,10 @@ package probers
 import (
 	"bytes"
 	"fmt"
-	pb "hostmonitor/pinger"
 	"os/exec"
 	"strconv"
 	"strings"
+	pb "testbed-monitor/pinger"
 )
 
 func ping(target string, replyCh chan *pb.PingReply) {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/joho/godotenv"
 	"log"
+	"os"
 	"testbed-monitor/measure"
 	"testbed-monitor/report"
 )
@@ -22,11 +23,11 @@ func main() {
 	if err != nil {
 		fmt.Printf("Fatal error %s while creating the report.Receiver, aborting\n", err)
 	}
-	fmt.Println("Starting report receiver...")
-	receiver.Start(towers)
+	fmt.Printf("Starting report receiver on port %s...\n", os.Getenv("RECEIVE_PORT"))
+	receiver.Start(&towers)
 
 	aggregate := report.NewAggregate(statusCh)
-	aggregate.Start(towers)
+	aggregate.Start(&towers)
 
 	//generatedConf, resolver := graph.NewResolver()
 	//proxy, _ := db.NewProxy(resolver, measureCh)
