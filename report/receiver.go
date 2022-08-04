@@ -112,23 +112,23 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers *
 		fmt.Printf("Received report from %s.\nReport: %s\n", addr, m.String())
 		receivedReports[addr.IP.String()] = time.Now()
 
+		// Check to see if this tower is new (aggregate will look at towers[])
+		towerKnown := false
+		for i := 0; i < len(*towers); i++ {
+			if (*towers)[i] == addr.IP.String() {
+				towerKnown = true
+			}
+		}
+		if towerKnown == false {
+			*towers = append(*towers, addr.IP.String())
+		}
+
 		if m.Strings == nil {
 			// some entries don't have a string map set
 			m.Strings = make(map[string]string)
 		}
 
-		if m.Strings["host_id"] == "Hello" {
-			// Check to see if this tower is new (aggregate will look at towers[])
-			towerKnown := false
-			for i := 0; i < len(*towers)-1; i++ {
-				if (*towers)[i] == addr.IP.String() {
-					towerKnown = true
-				}
-			}
-			if towerKnown == false {
-				*towers = append(*towers, addr.IP.String())
-			}
-		} else {
+		if m.Strings["host_id"] != "Hello" {
 			s := &StatusReport{}
 			GetStatusFromMeasure(addr.IP.String(), &m, receivedReports, s)
 			receiver.statusCh <- s
