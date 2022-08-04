@@ -68,8 +68,7 @@ func (aggregate *Aggregate) Start(IPs *[]string) {
 					emailData.ReportType = "Weekly"
 					Mail("Weekly Testbed Status Report for "+aggregatedReport.Timestamp, emailData)
 				} else {
-
-					for i = 0; i < 1; i++ {
+					for i = 0; i < len(*IPs); i++ {
 						DailyAggregator(reportAggregate, (*IPs)[i], &aggregatedReport)
 						emailData.Template = append(emailData.Template, aggregatedReport)
 					}
