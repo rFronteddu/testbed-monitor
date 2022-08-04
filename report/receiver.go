@@ -51,7 +51,7 @@ func (receiver *Receiver) Start(towers *[]string) {
 		replyCh := make(chan *pb.PingReply)
 		var p *pb.PingReply
 		var pingResponse, filename string
-		for _ = range ticker.C {
+		for range ticker.C {
 			for key, element := range receivedReports {
 				if time.Now().After(element.Add(60 * time.Minute)) {
 					fmt.Printf("Haven't received a report from %s in 60 minutes. Attempting to ping...\n", key)
@@ -130,7 +130,7 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers *
 
 		if m.Strings["host_id"] != "Hello" {
 			s := &StatusReport{}
-			GetStatusFromMeasure(addr.IP.String(), &m, receivedReports, s)
+			GetStatusFromMeasure(addr.IP.String(), &m, s)
 			receiver.statusCh <- s
 
 			var filename = time.Now().Format("2006-01-02_150405") + "_Report.txt"
@@ -180,14 +180,12 @@ func LogPingReport(filename string, data string) error {
 }
 
 // GetStatusFromMeasure reads a Measure Report and prepares a Status Report for the app to use later
-func GetStatusFromMeasure(ip string, m *measure.Measure, receivedReports map[string]time.Time, s *StatusReport) {
+func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport) {
 	s.TowerIP = ip
 	s.LastArduinoReachableTimestamp = time.Now().Add(time.Duration(m.Integers["LastArduinoReachableTimestamp"])).Format(time.RFC822)
 	s.LastTowerReachableTimestamp = time.Now().Format(time.RFC822)
 	s.BootTimestamp = m.Strings["bootTime"]
-	if m.Integers["uptime"] < int64(time.Now().Sub(receivedReports[ip]).Seconds()) {
-		s.RebootsCurrentDay = 1
-	}
+	s.RebootsCurrentDay = m.Integers["reboots"]
 	s.RAMUsed = m.Integers["vm_used"]
 	s.RAMTotal = m.Integers["vm_total"]
 	s.DiskUsed = m.Integers["DISK_USED"]

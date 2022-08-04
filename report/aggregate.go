@@ -93,9 +93,7 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 				templateData.LastArduinoReachableTimestamp = element.LastArduinoReachableTimestamp
 				templateData.LastTowerReachableTimestamp = element.LastTowerReachableTimestamp
 				templateData.BootTimestamp = element.BootTimestamp
-				if element.RebootsCurrentDay == 1 {
-					rebootCounter++
-				}
+				rebootCounter = rebootCounter + element.RebootsCurrentDay
 				if totalRAM == 0 {
 					totalRAM = element.RAMTotal
 				}
@@ -139,9 +137,7 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateDa
 				templateData.LastArduinoReachableTimestamp = element.LastArduinoReachableTimestamp
 				templateData.LastTowerReachableTimestamp = element.LastTowerReachableTimestamp
 				templateData.BootTimestamp = element.BootTimestamp
-				if element.RebootsCurrentDay == 1 {
-					rebootCounter++
-				}
+				rebootCounter = rebootCounter + element.RebootsCurrentDay
 				if totalRAM == 0 {
 					totalRAM = element.RAMTotal
 				}
