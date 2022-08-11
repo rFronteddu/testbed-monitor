@@ -15,10 +15,6 @@ import (
 	"time"
 )
 
-const (
-	SENSOR_IP = "sensor_ip"
-)
-
 type Receiver struct {
 	target     string
 	connection *net.UDPConn
@@ -30,7 +26,7 @@ func NewReportReceiver(measureCh chan *measure.Measure, statusCh chan *StatusRep
 	receiver := new(Receiver)
 	receiver.measureCh = measureCh
 	receiver.statusCh = statusCh
-	s, err := net.ResolveUDPAddr("udp4", ":8758")
+	s, err := net.ResolveUDPAddr("udp4", ":"+os.Getenv("RECEIVE_PORT"))
 	if err != nil {
 		return nil, err
 	}
@@ -42,15 +38,12 @@ func NewReportReceiver(measureCh chan *measure.Measure, statusCh chan *StatusRep
 	return receiver, nil
 }
 
-func (receiver *Receiver) Start(IPs []string) {
+func (receiver *Receiver) Start(towers *[]string) {
 	ticker := time.NewTicker(60 * time.Minute)
 	receivedReports := map[string]time.Time{}
-	for i := 0; i < len(IPs); i++ {
-		receivedReports[IPs[i]] = time.Time{}
-	}
 	// Go func to receive reports
 	go func() {
-		receiver.receive(receivedReports)
+		receiver.receive(receivedReports, towers)
 	}()
 	// Go func to ping a host when no report in 60 minutes
 	go func() {
@@ -58,7 +51,7 @@ func (receiver *Receiver) Start(IPs []string) {
 		replyCh := make(chan *pb.PingReply)
 		var p *pb.PingReply
 		var pingResponse, filename string
-		for _ = range ticker.C {
+		for range ticker.C {
 			for key, element := range receivedReports {
 				if time.Now().After(element.Add(60 * time.Minute)) {
 					fmt.Printf("Haven't received a report from %s in 60 minutes. Attempting to ping...\n", key)
@@ -82,7 +75,7 @@ func (receiver *Receiver) Start(IPs []string) {
 	}()
 }
 
-func (receiver *Receiver) receive(receivedReports map[string]time.Time) {
+func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers *[]string) {
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Printf("Fatal error while receiving: %s, will sleep 5 seconds before attempting to proceed\n", err)
@@ -119,22 +112,34 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time) {
 		fmt.Printf("Received report from %s.\nReport: %s\n", addr, m.String())
 		receivedReports[addr.IP.String()] = time.Now()
 
+		// Check to see if this tower is new (aggregate will look at towers[])
+		towerKnown := false
+		for i := 0; i < len(*towers); i++ {
+			if (*towers)[i] == addr.IP.String() {
+				towerKnown = true
+			}
+		}
+		if towerKnown == false {
+			*towers = append(*towers, addr.IP.String())
+		}
+
 		if m.Strings == nil {
 			// some entries don't have a string map set
 			m.Strings = make(map[string]string)
 		}
-		m.Strings[SENSOR_IP] = addr.IP.String()
 
-		s := &StatusReport{}
-		GetStatusFromMeasure(m.Strings[SENSOR_IP], &m, s)
-		receiver.statusCh <- s
+		if m.Strings["host_id"] != "Hello" {
+			s := &StatusReport{}
+			GetStatusFromMeasure(addr.IP.String(), &m, s)
+			receiver.statusCh <- s
 
-		var filename = time.Now().Format("2006-01-02_150405") + "_Report.txt"
-		err2 := LogReport(filename, m.String())
-		if err2 != nil {
-			fmt.Printf("Error in LogReport: %s", err2)
-			time.Sleep(60 * time.Second)
-			log.Fatal(err2)
+			var filename = time.Now().Format("2006-01-02_150405") + "_Report.txt"
+			err2 := LogReport(filename, m.String())
+			if err2 != nil {
+				fmt.Printf("Error in LogReport: %s", err2)
+				time.Sleep(60 * time.Second)
+				log.Fatal(err2)
+			}
 		}
 	}
 }
@@ -180,7 +185,7 @@ func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport) {
 	s.LastArduinoReachableTimestamp = time.Now().Add(time.Duration(m.Integers["LastArduinoReachableTimestamp"])).Format(time.RFC822)
 	s.LastTowerReachableTimestamp = time.Now().Format(time.RFC822)
 	s.BootTimestamp = m.Strings["bootTime"]
-	s.RebootsCurrentDay = m.Integers["Reboots_Today"]
+	s.RebootsCurrentDay = m.Integers["reboots"]
 	s.RAMUsed = m.Integers["vm_used"]
 	s.RAMTotal = m.Integers["vm_total"]
 	s.DiskUsed = m.Integers["DISK_USED"]

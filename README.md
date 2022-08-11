@@ -5,8 +5,24 @@ This is the Testbed Monitor app, created by rFronteddu and maintained by cb218. 
 The app is designed to run in conjunction with the **Host Monitor** (https://github.com/rFronteddu/host-monitor) app, another utility created by rFronteddu.
 
 ## Inputs
-**main.go** - Declare the hosts to be monitored in TowerIPs[]<br>
-**mailer.go** - Declare the email to send reports to in the Mail() function
+The **.env** should declare the following variables:
+```
+# The port the receiver runs on
+RECEIVE_PORT=
+# How often the system checks if it is time to send a report
+AGGREGATE_PERIOD=
+# The hour the report is sent
+AGGREGATE_HOUR=
+# The email to send the report from
+EMAIL=
+PASSWORD=
+# The SMTP host
+HOST=
+# The SMTP port
+MAIL_PORT=
+# The email to send the report to
+DESTINATION=
+```
 
 ## Connections
 **UDP** - The testbed monitor receives the host report on port 8758.<br>
