@@ -1,0 +1,15 @@
+[Unit]
+Description=Testbed Monitor Daemon
+After=network.target
+After=network-online.target
+After=systemd-user-sessions.service
+
+[Service]
+Type=exec
+WorkingDirectory=/usr/lib/monitor/
+ExecStart=/usr/lib/monitor/main
+ExecStop=/bin/kill -15 $MAINPID
+
+[Install]
+WantedBy=multi-user.target
+iobt-admin@tower-2:/usr/lib/monitor$
