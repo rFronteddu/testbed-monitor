@@ -34,6 +34,11 @@
             font-size: 14px;
             text-align: center;
         }
+        .content[reachable="false"]{
+            background-color: red;
+            font-size: 14px;
+            text-align: center;
+        }
     </style>
 </head>
 
@@ -41,7 +46,7 @@
     <table>
         <tr class="header">
             <th colspan="8">
-                {{ .ReportType }} Generated Testbed Status Report
+                {{ .ReportType }} Generated Testbed Status Report<br>{{ .Timestamp }}
             </th>
         </tr>
         <tr class="subheader">
@@ -55,7 +60,7 @@
             <th>Average CPU</th>
         </tr>
         {{ range .Template }}
-        <tr class="content">
+        <tr reachable="{{ .Reachable }}" class="content">
             <td>{{ .TowerIP }}</td>
             <td>{{ .LastArduinoReachableTimestamp }}</td>
             <td>{{ .LastTowerReachableTimestamp }}</td>

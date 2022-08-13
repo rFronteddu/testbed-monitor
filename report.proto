@@ -17,7 +17,8 @@ message StatusReport {
     int64 diskUsed = 8; // measure.Integers["DISK_USED"]
     int64 diskTotal = 9; // measure.Integers["DISK_TOTAL"]
     int64 CPUAvg = 10; // measure.Integers["CPU_AVG"]
-    google.protobuf.Timestamp timestamp = 11; //the time when this measure was collected
+    google.protobuf.Timestamp timestamp = 11; // the time when this measure was collected
+    bool reachable = 12; // has this tower been reached within the expected time?
 }
 
 // compile with: protoc --go_out=. *.proto

@@ -21,11 +21,12 @@ type TemplateData struct {
 	RAMUsedAvgMB                  string
 	DiskUsedAvgGB                 string
 	CPUAvg                        string
-	Timestamp                     string
+	Reachable                     bool
 }
 
 type emailTemplate struct {
 	ReportType string
+	Timestamp  string
 	Template   []TemplateData
 }
 
@@ -39,17 +40,16 @@ func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateH
 
 var aggregatedReport TemplateData
 var emailData emailTemplate
+var subject string
 
 func (aggregate *Aggregate) Start(IPs *[]string) {
 	dailyTicker := time.NewTicker(time.Duration(aggregate.aggregatePeriod) * time.Minute)
 	reportAggregate := make(map[time.Time]*StatusReport)
-
 	var i int
-
 	for {
 		select {
 		case <-dailyTicker.C:
-			if time.Now().Hour() == aggregate.aggregateHour { // Daily report
+			if time.Now().Hour() == aggregate.aggregateHour {
 				emailData.Template = nil
 				if time.Now().Weekday().String() == "Sunday" { // Weekly report on Sundays
 					for i = 0; i < len(*IPs); i++ {
@@ -57,14 +57,18 @@ func (aggregate *Aggregate) Start(IPs *[]string) {
 						emailData.Template = append(emailData.Template, aggregatedReport)
 					}
 					emailData.ReportType = "Weekly"
-					Mail("Weekly Testbed Status Report for "+aggregatedReport.Timestamp, emailData)
-				} else {
+					emailData.Timestamp = time.Now().Format("Jan 02 2006 15:04:05")
+					subject = "Weekly Testbed Status Report " + emailData.Timestamp
+					Mail(subject, emailData)
+				} else { // Daily report
 					for i = 0; i < len(*IPs); i++ {
 						DailyAggregator(reportAggregate, (*IPs)[i], &aggregatedReport)
 						emailData.Template = append(emailData.Template, aggregatedReport)
 					}
 					emailData.ReportType = "Daily"
-					Mail("Daily Testbed Status Report for "+aggregatedReport.Timestamp, emailData)
+					emailData.Timestamp = time.Now().Format("Jan 02 2006 15:04:05")
+					subject = "Daily Testbed Status Report " + emailData.Timestamp
+					Mail(subject, emailData)
 				}
 			}
 		case msg := <-aggregate.statusChan:
@@ -78,21 +82,25 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 	var totalRAM, totalDisk int64 = 0, 0
 	compareTime := time.Time{}
 	for key, element := range reports {
+		templateData.TowerIP = element.TowerIP
 		if key.Day() == time.Now().Day() && element.TowerIP == IP {
+			templateData.Reachable = true
 			if element.Timestamp.AsTime().After(compareTime) {
-				templateData.TowerIP = element.TowerIP
 				templateData.LastArduinoReachableTimestamp = element.LastArduinoReachableTimestamp
 				templateData.LastTowerReachableTimestamp = element.LastTowerReachableTimestamp
 				templateData.BootTimestamp = element.BootTimestamp
-				rebootCounter = rebootCounter + element.RebootsCurrentDay
 				if totalRAM == 0 {
 					totalRAM = element.RAMTotal
 				}
 				if totalDisk == 0 {
 					totalDisk = element.DiskTotal
 				}
+				//if element.Reachable == false {
+				//	templateData.Reachable = false
+				//}
 				compareTime = element.Timestamp.AsTime()
 			}
+			rebootCounter = rebootCounter + element.RebootsCurrentDay
 			usedRAMAvg = usedRAMAvg + element.RAMUsed
 			RAMCounter++
 			usedDiskAvg = usedDiskAvg + element.DiskUsed
@@ -114,7 +122,6 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 	}
 	templateData.CPUAvg = strconv.FormatInt(CPUAvg, 10) + "%"
 	templateData.RebootsCurrentDay = strconv.FormatInt(rebootCounter, 10)
-	templateData.Timestamp = time.Now().Format("Jan 02 2006")
 }
 
 func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateData *TemplateData) {
@@ -122,13 +129,13 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateDa
 	var totalRAM, totalDisk int64 = 0, 0
 	compareTime := time.Time{}
 	for key, element := range reports {
+		templateData.TowerIP = element.TowerIP
 		if key.After(time.Now().Add(-7*24*time.Hour)) && element.TowerIP == IP {
 			if element.Timestamp.AsTime().After(compareTime) {
-				templateData.TowerIP = element.TowerIP
 				templateData.LastArduinoReachableTimestamp = element.LastArduinoReachableTimestamp
 				templateData.LastTowerReachableTimestamp = element.LastTowerReachableTimestamp
 				templateData.BootTimestamp = element.BootTimestamp
-				rebootCounter = rebootCounter + element.RebootsCurrentDay
+
 				if totalRAM == 0 {
 					totalRAM = element.RAMTotal
 				}
@@ -137,6 +144,7 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateDa
 				}
 				compareTime = element.Timestamp.AsTime()
 			}
+			rebootCounter = rebootCounter + element.RebootsCurrentDay
 			usedRAMAvg = usedRAMAvg + element.RAMUsed
 			RAMCounter++
 			usedDiskAvg = usedDiskAvg + element.DiskUsed
@@ -158,5 +166,4 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateDa
 	}
 	templateData.CPUAvg = strconv.FormatInt(CPUAvg, 10) + "%"
 	templateData.RebootsCurrentDay = strconv.FormatInt(rebootCounter, 10)
-	templateData.Timestamp = time.Now().Format("Jan 02 2006")
 }

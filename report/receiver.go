@@ -2,6 +2,7 @@ package report
 
 import (
 	"fmt"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/protobuf/proto"
 	"net"
 	"strings"
@@ -59,7 +60,11 @@ func (receiver *Receiver) Start(towers *[]string) {
 						fmt.Printf("\nTower %s was reached at %s\n", key, element)
 					} else {
 						fmt.Printf("\nTower %s is unreachable!\n", key)
-						// do something!!!
+						s := &StatusReport{}
+						s.TowerIP = key
+						s.Timestamp = &timestamp.Timestamp{Seconds: time.Now().Unix()}
+						//s.Reachable = false
+						receiver.statusCh <- s
 					}
 				}
 			}
