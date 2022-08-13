@@ -4,14 +4,12 @@ go 1.17
 
 require (
 	github.com/99designs/gqlgen v0.17.2
-	github.com/go-chi/chi v1.5.4
-	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/go-memdb v1.3.2
 	github.com/joho/godotenv v1.4.0
-	github.com/rs/cors v1.8.2
 	github.com/vektah/gqlparser/v2 v2.4.0
 	google.golang.org/grpc v1.45.0
 	google.golang.org/protobuf v1.28.0
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 )
 
 require (
@@ -21,7 +19,6 @@ require (
 	github.com/hashicorp/go-immutable-radix v1.3.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/matryer/moq v0.2.3 // indirect
-	github.com/mitchellh/mapstructure v1.2.3 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/urfave/cli/v2 v2.3.0 // indirect
 	golang.org/x/mod v0.5.1 // indirect

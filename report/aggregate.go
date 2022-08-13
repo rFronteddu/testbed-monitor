@@ -1,14 +1,14 @@
 package report
 
 import (
-	"fmt"
-	"os"
 	"strconv"
 	"time"
 )
 
 type Aggregate struct {
-	statusChan chan *StatusReport
+	statusChan      chan *StatusReport
+	aggregatePeriod int
+	aggregateHour   int
 }
 
 type TemplateData struct {
@@ -29,9 +29,11 @@ type emailTemplate struct {
 	Template   []TemplateData
 }
 
-func NewAggregate(statusChan chan *StatusReport) *Aggregate {
+func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateHour int) *Aggregate {
 	aggregate := new(Aggregate)
 	aggregate.statusChan = statusChan
+	aggregate.aggregatePeriod = aggregatePeriod
+	aggregate.aggregateHour = aggregateHour
 	return aggregate
 }
 
@@ -39,18 +41,7 @@ var aggregatedReport TemplateData
 var emailData emailTemplate
 
 func (aggregate *Aggregate) Start(IPs *[]string) {
-	period, err := strconv.Atoi(os.Getenv("AGGREGATE_PERIOD"))
-	if err != nil {
-		fmt.Println("It was not possible to convert aggregate period: " + os.Getenv("AGGREGATE_PERIOD") + " " + err.Error())
-		return
-	}
-	hour, err2 := strconv.Atoi(os.Getenv("AGGREGATE_HOUR"))
-	if err2 != nil {
-		fmt.Println("It was not possible to convert aggregate hour: " + os.Getenv("AGGREGATE_HOUR") + " " + err.Error())
-		return
-	}
-	fmt.Printf("Daily report will be emailed at hour %v\n", hour)
-	dailyTicker := time.NewTicker(time.Duration(period) * time.Minute)
+	dailyTicker := time.NewTicker(time.Duration(aggregate.aggregatePeriod) * time.Minute)
 	reportAggregate := make(map[time.Time]*StatusReport)
 
 	var i int
@@ -58,7 +49,7 @@ func (aggregate *Aggregate) Start(IPs *[]string) {
 	for {
 		select {
 		case <-dailyTicker.C:
-			if time.Now().Hour() == hour { // Daily report
+			if time.Now().Hour() == aggregate.aggregateHour { // Daily report
 				emailData.Template = nil
 				if time.Now().Weekday().String() == "Sunday" { // Weekly report on Sundays
 					for i = 0; i < len(*IPs); i++ {

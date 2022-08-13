@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"google.golang.org/protobuf/proto"
 	"net"
-	"os"
 	"strings"
 	"testbed-monitor/measure"
 	pb "testbed-monitor/pinger"
@@ -13,17 +12,18 @@ import (
 )
 
 type Receiver struct {
-	target     string
-	connection *net.UDPConn
-	measureCh  chan *measure.Measure
-	statusCh   chan *StatusReport
+	target               string
+	connection           *net.UDPConn
+	measureCh            chan *measure.Measure
+	statusCh             chan *StatusReport
+	expectedReportPeriod int
 }
 
-func NewReportReceiver(measureCh chan *measure.Measure, statusCh chan *StatusReport) (*Receiver, error) {
+func NewReportReceiver(measureCh chan *measure.Measure, statusCh chan *StatusReport, receivePort string, expectedReportPeriod int) (*Receiver, error) {
 	receiver := new(Receiver)
 	receiver.measureCh = measureCh
 	receiver.statusCh = statusCh
-	s, err := net.ResolveUDPAddr("udp4", ":"+os.Getenv("RECEIVE_PORT"))
+	s, err := net.ResolveUDPAddr("udp4", ":"+receivePort)
 	if err != nil {
 		return nil, err
 	}
@@ -32,25 +32,25 @@ func NewReportReceiver(measureCh chan *measure.Measure, statusCh chan *StatusRep
 		return nil, err
 	}
 	receiver.connection = connection
+	receiver.expectedReportPeriod = expectedReportPeriod
 	return receiver, nil
 }
 
 func (receiver *Receiver) Start(towers *[]string) {
-	ticker := time.NewTicker(60 * time.Minute)
+	ticker := time.NewTicker(time.Duration(receiver.expectedReportPeriod) * time.Minute)
+	replyCh := make(chan *pb.PingReply)
+	var p *pb.PingReply
 	receivedReports := map[string]time.Time{}
 	// Go func to receive reports
 	go func() {
 		receiver.receive(receivedReports, towers)
 	}()
-	// Go func to ping a host when no report in 60 minutes
+	// Go func to ping a host when no report in expected time
 	go func() {
-		time.Sleep(60 * time.Minute)
-		replyCh := make(chan *pb.PingReply)
-		var p *pb.PingReply
 		for range ticker.C {
 			for key, element := range receivedReports {
-				if time.Now().After(element.Add(60 * time.Minute)) {
-					fmt.Printf("Haven't received a report from %s in 60 minutes. Attempting to ping...\n", key)
+				if time.Now().After(element.Add(time.Duration(receiver.expectedReportPeriod) * time.Minute)) {
+					fmt.Printf("Haven't received a report from %s in %v minutes. Attempting to ping...\n", key, receiver.expectedReportPeriod)
 					icmp := probers.NewICMPProbe(key, replyCh)
 					icmp.Start()
 					p = <-replyCh
@@ -59,6 +59,7 @@ func (receiver *Receiver) Start(towers *[]string) {
 						fmt.Printf("\nTower %s was reached at %s\n", key, element)
 					} else {
 						fmt.Printf("\nTower %s is unreachable!\n", key)
+						// do something!!!
 					}
 				}
 			}
