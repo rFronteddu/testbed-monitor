@@ -84,8 +84,8 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 	for key, element := range reports {
 		templateData.TowerIP = element.TowerIP
 		if key.Day() == time.Now().Day() && element.TowerIP == IP {
-			templateData.Reachable = true
 			if element.Timestamp.AsTime().After(compareTime) {
+				templateData.Reachable = true
 				templateData.LastArduinoReachableTimestamp = element.LastArduinoReachableTimestamp
 				templateData.LastTowerReachableTimestamp = element.LastTowerReachableTimestamp
 				templateData.BootTimestamp = element.BootTimestamp
@@ -95,9 +95,9 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 				if totalDisk == 0 {
 					totalDisk = element.DiskTotal
 				}
-				//if element.Reachable == false {
-				//	templateData.Reachable = false
-				//}
+				if element.Reachable == false {
+					templateData.Reachable = false
+				}
 				compareTime = element.Timestamp.AsTime()
 			}
 			rebootCounter = rebootCounter + element.RebootsCurrentDay
@@ -132,6 +132,7 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateDa
 		templateData.TowerIP = element.TowerIP
 		if key.After(time.Now().Add(-7*24*time.Hour)) && element.TowerIP == IP {
 			if element.Timestamp.AsTime().After(compareTime) {
+				templateData.Reachable = true
 				templateData.LastArduinoReachableTimestamp = element.LastArduinoReachableTimestamp
 				templateData.LastTowerReachableTimestamp = element.LastTowerReachableTimestamp
 				templateData.BootTimestamp = element.BootTimestamp
@@ -141,6 +142,9 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateDa
 				}
 				if totalDisk == 0 {
 					totalDisk = element.DiskTotal
+				}
+				if element.Reachable == false {
+					templateData.Reachable = false
 				}
 				compareTime = element.Timestamp.AsTime()
 			}

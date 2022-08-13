@@ -1,9 +1,10 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html>
+<html lang="en-us">
 <head>
     <meta name="viewport" content="width=device-width"/>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <style type="text/css">
         body{
             margin: 0 auto;
@@ -34,22 +35,18 @@
             font-size: 14px;
             text-align: center;
         }
-        .content[reachable="false"]{
-            background-color: red;
-            font-size: 14px;
-            text-align: center;
-        }
     </style>
 </head>
 
 <body>
-    <table>
+    <table id="mytable">
         <tr class="header">
-            <th colspan="8">
+            <th colspan="9">
                 {{ .ReportType }} Generated Testbed Status Report<br>{{ .Timestamp }}
             </th>
         </tr>
         <tr class="subheader">
+            <th>Reachable</th>
             <th>Tower</th>
             <th>Reached Server (.2)</th>
             <th>Reached Board (.1)</th>
@@ -60,7 +57,8 @@
             <th>Average CPU</th>
         </tr>
         {{ range .Template }}
-        <tr reachable="{{ .Reachable }}" class="content">
+        <tr class="content">
+            <td>{{ .Reachable }}</td>
             <td>{{ .TowerIP }}</td>
             <td>{{ .LastArduinoReachableTimestamp }}</td>
             <td>{{ .LastTowerReachableTimestamp }}</td>
@@ -72,6 +70,23 @@
         </tr>
         {{ end }}
     </table>
+    <script type="text/javascript">
+        $(function() {
+            $("#mytable td").each(function() {
+                if ($(this).text() === 'false') {
+                    $(this).css('background-color', 'red');
+                }
+                if ($(this).text() === 'False') {
+                    $(this).css('background-color', 'red');
+                }
+                if ($(this).text() === "False") {
+                    $(this).css('background-color', 'red');
+                }
+                if ($(this).text() === false) {
+                    $(this).css('background-color', 'red');
+                }
+            });
+        });
+    </script>
 </body>
-
 </html>

@@ -42,6 +42,13 @@ func (receiver *Receiver) Start(towers *[]string) {
 	replyCh := make(chan *pb.PingReply)
 	var p *pb.PingReply
 	receivedReports := map[string]time.Time{}
+
+	////TEST//
+	//receivedReports["125.23.23.15"] = time.Now()
+	//*towers = append(*towers, "125.23.23.15")
+	//fmt.Println("Test case set")
+	////TEST//
+
 	// Go func to receive reports
 	go func() {
 		receiver.receive(receivedReports, towers)
@@ -63,7 +70,7 @@ func (receiver *Receiver) Start(towers *[]string) {
 						s := &StatusReport{}
 						s.TowerIP = key
 						s.Timestamp = &timestamp.Timestamp{Seconds: time.Now().Unix()}
-						//s.Reachable = false
+						s.Reachable = false
 						receiver.statusCh <- s
 					}
 				}
@@ -146,4 +153,5 @@ func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport) {
 	s.DiskTotal = m.Integers["DISK_TOTAL"]
 	s.CPUAvg = m.Integers["CPU_AVG"]
 	s.Timestamp = m.Timestamp
+
 }
