@@ -12,4 +12,3 @@ ExecStop=/bin/kill -15 $MAINPID
 
 [Install]
 WantedBy=multi-user.target
-iobt-admin@tower-2:/usr/lib/monitor$
