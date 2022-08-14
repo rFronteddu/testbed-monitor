@@ -153,5 +153,5 @@ func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport) {
 	s.DiskTotal = m.Integers["DISK_TOTAL"]
 	s.CPUAvg = m.Integers["CPU_AVG"]
 	s.Timestamp = m.Timestamp
-
+	s.Reachable = true
 }

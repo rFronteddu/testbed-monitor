@@ -12,7 +12,6 @@ type Aggregate struct {
 }
 
 type TemplateData struct {
-	Name                          string
 	TowerIP                       string
 	LastArduinoReachableTimestamp string
 	LastTowerReachableTimestamp   string
@@ -41,6 +40,7 @@ func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateH
 var aggregatedReport TemplateData
 var emailData emailTemplate
 var subject string
+var unreachableFlag bool
 
 func (aggregate *Aggregate) Start(IPs *[]string) {
 	dailyTicker := time.NewTicker(time.Duration(aggregate.aggregatePeriod) * time.Minute)
@@ -51,25 +51,26 @@ func (aggregate *Aggregate) Start(IPs *[]string) {
 		case <-dailyTicker.C:
 			if time.Now().Hour() == aggregate.aggregateHour {
 				emailData.Template = nil
+				unreachableFlag = false
 				if time.Now().Weekday().String() == "Sunday" { // Weekly report on Sundays
 					for i = 0; i < len(*IPs); i++ {
 						WeeklyAggregator(reportAggregate, (*IPs)[i], &aggregatedReport)
 						emailData.Template = append(emailData.Template, aggregatedReport)
 					}
 					emailData.ReportType = "Weekly"
-					emailData.Timestamp = time.Now().Format("Jan 02 2006 15:04:05")
-					subject = "Weekly Testbed Status Report " + emailData.Timestamp
-					Mail(subject, emailData)
 				} else { // Daily report
 					for i = 0; i < len(*IPs); i++ {
 						DailyAggregator(reportAggregate, (*IPs)[i], &aggregatedReport)
 						emailData.Template = append(emailData.Template, aggregatedReport)
 					}
 					emailData.ReportType = "Daily"
-					emailData.Timestamp = time.Now().Format("Jan 02 2006 15:04:05")
-					subject = "Daily Testbed Status Report " + emailData.Timestamp
-					Mail(subject, emailData)
 				}
+				emailData.Timestamp = time.Now().Format("Jan 02 2006 15:04:05")
+				subject = emailData.ReportType + " Testbed Status Report " + emailData.Timestamp
+				if unreachableFlag {
+					subject += " : 1 or more towers is down!"
+				}
+				Mail(subject, emailData)
 			}
 		case msg := <-aggregate.statusChan:
 			reportAggregate[time.Now()] = msg
@@ -122,6 +123,9 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 	}
 	templateData.CPUAvg = strconv.FormatInt(CPUAvg, 10) + "%"
 	templateData.RebootsCurrentDay = strconv.FormatInt(rebootCounter, 10)
+	if templateData.Reachable == false {
+		unreachableFlag = true
+	}
 }
 
 func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateData *TemplateData) {
@@ -170,4 +174,7 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateDa
 	}
 	templateData.CPUAvg = strconv.FormatInt(CPUAvg, 10) + "%"
 	templateData.RebootsCurrentDay = strconv.FormatInt(rebootCounter, 10)
+	if templateData.Reachable == false {
+		unreachableFlag = true
+	}
 }

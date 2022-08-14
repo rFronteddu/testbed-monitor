@@ -4,7 +4,6 @@
 <head>
     <meta name="viewport" content="width=device-width"/>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <style type="text/css">
         body{
             margin: 0 auto;
@@ -35,18 +34,22 @@
             font-size: 14px;
             text-align: center;
         }
+        .unreachable{
+            background-color: red;
+            font-size: 14px;
+            text-align: center;
+        }
     </style>
 </head>
 
 <body>
-    <table id="mytable">
+    <table>
         <tr class="header">
-            <th colspan="9">
+            <th colspan="8">
                 {{ .ReportType }} Generated Testbed Status Report<br>{{ .Timestamp }}
             </th>
         </tr>
         <tr class="subheader">
-            <th>Reachable</th>
             <th>Tower</th>
             <th>Reached Server (.2)</th>
             <th>Reached Board (.1)</th>
@@ -57,36 +60,21 @@
             <th>Average CPU</th>
         </tr>
         {{ range .Template }}
-        <tr class="content">
-            <td>{{ .Reachable }}</td>
-            <td>{{ .TowerIP }}</td>
-            <td>{{ .LastArduinoReachableTimestamp }}</td>
-            <td>{{ .LastTowerReachableTimestamp }}</td>
-            <td>{{ .BootTimestamp }}</td>
-            <td>{{ .RebootsCurrentDay }}</td>
-            <td>{{ .RAMUsedAvgMB }}</td>
-            <td>{{ .DiskUsedAvgGB }}</td>
-            <td>{{ .CPUAvg }}</td>
-        </tr>
+            {{ if .Reachable }}
+            <tr class="content">
+            {{ else }}
+            <tr class="unreachable">
+            {{ end }}
+                <td>{{ .TowerIP }}</td>
+                <td>{{ .LastArduinoReachableTimestamp }}</td>
+                <td>{{ .LastTowerReachableTimestamp }}</td>
+                <td>{{ .BootTimestamp }}</td>
+                <td>{{ .RebootsCurrentDay }}</td>
+                <td>{{ .RAMUsedAvgMB }}</td>
+                <td>{{ .DiskUsedAvgGB }}</td>
+                <td>{{ .CPUAvg }}</td>
+            </tr>
         {{ end }}
     </table>
-    <script type="text/javascript">
-        $(function() {
-            $("#mytable td").each(function() {
-                if ($(this).text() === 'false') {
-                    $(this).css('background-color', 'red');
-                }
-                if ($(this).text() === 'False') {
-                    $(this).css('background-color', 'red');
-                }
-                if ($(this).text() === "False") {
-                    $(this).css('background-color', 'red');
-                }
-                if ($(this).text() === false) {
-                    $(this).css('background-color', 'red');
-                }
-            });
-        });
-    </script>
 </body>
 </html>
