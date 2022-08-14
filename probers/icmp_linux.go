@@ -29,7 +29,6 @@ func ping(target string, replyCh chan *pb.PingReply) {
 		return
 	}
 
-	var packetsReceived int
 	var rtt int
 	var loss int
 	var reachable = false
