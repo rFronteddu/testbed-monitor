@@ -29,15 +29,16 @@ AGGREGATE_HOUR:
 EXPECTED_REPORT_PERIOD: 
 ```
 
-## Connections
-**UDP** - The testbed monitor receives the host report on port 8758.<br>
-**ICMP** - If the testbed monitor has not received a report from a host in 60 minutes, it pings that host via ICMP.
-
 ## Installation
 ### Prerequisites
 * go > 1.6
 ### Install
+If using a linux system, the **testbed-monitor.service** daemon can be used to build and run the program.
 ```
-    go get 
-    go build
+    ./setup-service.sh
+```
+On other systems, the program can be started manually after building.
+```
+    go build main.go
+    ./main
 ```
