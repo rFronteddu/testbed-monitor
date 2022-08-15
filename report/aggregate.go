@@ -68,7 +68,7 @@ func (aggregate *Aggregate) Start(IPs *[]string) {
 				emailData.Timestamp = time.Now().Format("Jan 02 2006 15:04:05")
 				subject = emailData.ReportType + " Testbed Status Report " + emailData.Timestamp
 				if unreachableFlag {
-					subject += " : 1 or more towers is down!"
+					subject += ": 1 or more towers is down!"
 				}
 				Mail(subject, emailData)
 			}
@@ -82,14 +82,16 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 	var usedRAMAvg, RAMCounter, usedDiskAvg, diskCounter, CPUAvg, CPUCounter, rebootCounter int64 = 0, 0, 0, 0, 0, 0, 0
 	var totalRAM, totalDisk int64 = 0, 0
 	compareTime := time.Time{}
+	templateData.TowerIP = IP
 	for key, element := range reports {
-		templateData.TowerIP = element.TowerIP
 		if key.Day() == time.Now().Day() && element.TowerIP == IP {
 			if element.Timestamp.AsTime().After(compareTime) {
 				templateData.Reachable = true
-				templateData.LastArduinoReachableTimestamp = element.LastArduinoReachableTimestamp
-				templateData.LastTowerReachableTimestamp = element.LastTowerReachableTimestamp
-				templateData.BootTimestamp = element.BootTimestamp
+				if element.Reachable == true {
+					templateData.LastArduinoReachableTimestamp = element.LastArduinoReachableTimestamp
+					templateData.LastTowerReachableTimestamp = element.LastTowerReachableTimestamp
+					templateData.BootTimestamp = element.BootTimestamp
+				}
 				if totalRAM == 0 {
 					totalRAM = element.RAMTotal
 				}
@@ -132,15 +134,17 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateDa
 	var usedRAMAvg, RAMCounter, usedDiskAvg, diskCounter, CPUAvg, CPUCounter, rebootCounter int64 = 0, 0, 0, 0, 0, 0, 0
 	var totalRAM, totalDisk int64 = 0, 0
 	compareTime := time.Time{}
+	templateData.TowerIP = IP
 	for key, element := range reports {
-		templateData.TowerIP = element.TowerIP
+		templateData.TowerIP = IP
 		if key.After(time.Now().Add(-7*24*time.Hour)) && element.TowerIP == IP {
 			if element.Timestamp.AsTime().After(compareTime) {
 				templateData.Reachable = true
-				templateData.LastArduinoReachableTimestamp = element.LastArduinoReachableTimestamp
-				templateData.LastTowerReachableTimestamp = element.LastTowerReachableTimestamp
-				templateData.BootTimestamp = element.BootTimestamp
-
+				if element.Reachable == true {
+					templateData.LastArduinoReachableTimestamp = element.LastArduinoReachableTimestamp
+					templateData.LastTowerReachableTimestamp = element.LastTowerReachableTimestamp
+					templateData.BootTimestamp = element.BootTimestamp
+				}
 				if totalRAM == 0 {
 					totalRAM = element.RAMTotal
 				}

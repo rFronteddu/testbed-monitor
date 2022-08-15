@@ -60,20 +60,20 @@
             <th>Average CPU</th>
         </tr>
         {{ range .Template }}
+        <tr class="content">
             {{ if .Reachable }}
-            <tr class="content">
-            {{ else }}
-            <tr class="unreachable">
-            {{ end }}
                 <td>{{ .TowerIP }}</td>
-                <td>{{ .LastArduinoReachableTimestamp }}</td>
-                <td>{{ .LastTowerReachableTimestamp }}</td>
-                <td>{{ .BootTimestamp }}</td>
-                <td>{{ .RebootsCurrentDay }}</td>
-                <td>{{ .RAMUsedAvgMB }}</td>
-                <td>{{ .DiskUsedAvgGB }}</td>
-                <td>{{ .CPUAvg }}</td>
-            </tr>
+            {{ else }}
+                <td class ="unreachable">{{ .TowerIP }}</td>
+            {{ end }}
+            <td>{{ .LastTowerReachableTimestamp }}</td>
+            <td>{{ .LastArduinoReachableTimestamp }}</td>
+            <td>{{ .BootTimestamp }}</td>
+            <td>{{ .RebootsCurrentDay }}</td>
+            <td>{{ .RAMUsedAvgMB }}</td>
+            <td>{{ .DiskUsedAvgGB }}</td>
+            <td>{{ .CPUAvg }}</td>
+        </tr>
         {{ end }}
     </table>
 </body>
