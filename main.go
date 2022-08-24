@@ -16,13 +16,14 @@ type Configuration struct {
 	AggregatePeriod      string `yaml:"AGGREGATE_PERIOD"`
 	AggregateHour        string `yaml:"AGGREGATE_HOUR"`
 	ExpectedReportPeriod string `yaml:"EXPECTED_REPORT_PERIOD"`
+	CriticalTemp         string `yaml:"CRITICAL_TEMP"`
 }
 
 func loadConfiguration(path string) *Configuration {
 	yfile, err := ioutil.ReadFile(path)
 	if err != nil {
 		fmt.Printf("Could not open %s error: %s\n", path, err)
-		conf := &Configuration{"8758", "60", "23", "30"}
+		conf := &Configuration{"8758", "60", "23", "30", "200"}
 		fmt.Printf("Host Monitor will use default configuration: %v\n", conf)
 		return conf
 	}
@@ -82,8 +83,16 @@ func main() {
 		}
 		fmt.Printf("Daily report will be emailed at hour %v\n", conf.AggregateHour)
 	}
+	criticalTemp := 200
+	if conf.CriticalTemp != "" {
+		criticalTemp, err = strconv.Atoi(conf.CriticalTemp)
+		if err != nil {
+			fmt.Printf("Error converting %s to integer, critical temperature set to default (200)", conf.CriticalTemp)
+		}
+		fmt.Printf("Program will notify user if temperature is above %v\n", conf.CriticalTemp)
+	}
 
-	aggregate := report.NewAggregate(statusCh, aggregatePeriod, aggregateHour)
+	aggregate := report.NewAggregate(statusCh, aggregatePeriod, aggregateHour, criticalTemp)
 	aggregate.Start(&towers)
 
 	//generatedConf, resolver := graph.NewResolver()

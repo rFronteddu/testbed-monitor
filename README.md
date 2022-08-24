@@ -27,6 +27,8 @@ AGGREGATE_PERIOD:
 AGGREGATE_HOUR: 
 # How long should the receiver wait for a host report before trying to ping
 EXPECTED_REPORT_PERIOD: 
+# What temperature should trigger a warning notification
+CRITICAL_TEMP: 
 ```
 
 ## Installation

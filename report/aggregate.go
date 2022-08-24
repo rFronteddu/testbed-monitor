@@ -9,6 +9,7 @@ type Aggregate struct {
 	statusChan      chan *StatusReport
 	aggregatePeriod int
 	aggregateHour   int
+	criticalTemp    int
 }
 
 type TemplateData struct {
@@ -29,11 +30,12 @@ type emailTemplate struct {
 	Template   []TemplateData
 }
 
-func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateHour int) *Aggregate {
+func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateHour int, criticalTemp int) *Aggregate {
 	aggregate := new(Aggregate)
 	aggregate.statusChan = statusChan
 	aggregate.aggregatePeriod = aggregatePeriod
 	aggregate.aggregateHour = aggregateHour
+	aggregate.criticalTemp = criticalTemp
 	return aggregate
 }
 
