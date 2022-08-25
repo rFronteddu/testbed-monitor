@@ -22,6 +22,7 @@ type TemplateData struct {
 	DiskUsedAvgGB                 string
 	CPUAvg                        string
 	Reachable                     bool
+	Temperature                   string
 }
 
 type emailTemplate struct {
@@ -82,7 +83,7 @@ func (aggregate *Aggregate) Start(IPs *[]string) {
 
 func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateData *TemplateData) {
 	var usedRAMAvg, RAMCounter, usedDiskAvg, diskCounter, CPUAvg, CPUCounter, rebootCounter int64 = 0, 0, 0, 0, 0, 0, 0
-	var totalRAM, totalDisk int64 = 0, 0
+	var totalRAM, totalDisk, maxTemp int64 = 0, 0, 0
 	compareTime := time.Time{}
 	templateData.TowerIP = IP
 	for key, element := range reports {
@@ -102,6 +103,9 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 				}
 				if element.Reachable == false {
 					templateData.Reachable = false
+				}
+				if element.Temperature > maxTemp {
+					maxTemp = element.Temperature
 				}
 				compareTime = element.Timestamp.AsTime()
 			}
@@ -130,11 +134,12 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 	if templateData.Reachable == false {
 		unreachableFlag = true
 	}
+	templateData.Temperature = strconv.FormatInt(maxTemp, 10)
 }
 
 func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateData *TemplateData) {
 	var usedRAMAvg, RAMCounter, usedDiskAvg, diskCounter, CPUAvg, CPUCounter, rebootCounter int64 = 0, 0, 0, 0, 0, 0, 0
-	var totalRAM, totalDisk int64 = 0, 0
+	var totalRAM, totalDisk, maxTemp int64 = 0, 0, 0
 	compareTime := time.Time{}
 	templateData.TowerIP = IP
 	for key, element := range reports {
@@ -156,6 +161,9 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateDa
 				if element.Reachable == false {
 					templateData.Reachable = false
 				}
+				if element.Temperature > maxTemp {
+					maxTemp = element.Temperature
+				}
 				compareTime = element.Timestamp.AsTime()
 			}
 			rebootCounter = rebootCounter + element.RebootsCurrentDay
@@ -183,4 +191,5 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateDa
 	if templateData.Reachable == false {
 		unreachableFlag = true
 	}
+	templateData.Temperature = strconv.FormatInt(maxTemp, 10)
 }

@@ -45,7 +45,7 @@
 <body>
     <table>
         <tr class="header">
-            <th colspan="8">
+            <th colspan="9">
                 {{ .ReportType }} Generated Testbed Status Report<br>{{ .Timestamp }}
             </th>
         </tr>
@@ -58,6 +58,7 @@
             <th>Average RAM Usage</th>
             <th>Average Disk Usage</th>
             <th>Average CPU</th>
+            <th>Max Temperature</th>
         </tr>
         {{ range .Template }}
         <tr class="content">
@@ -73,6 +74,7 @@
             <td>{{ .RAMUsedAvgMB }}</td>
             <td>{{ .DiskUsedAvgGB }}</td>
             <td>{{ .CPUAvg }}</td>
+            <td>{{ .Temperature }}</td>
         </tr>
         {{ end }}
     </table>
