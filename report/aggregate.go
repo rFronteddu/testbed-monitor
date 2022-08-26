@@ -25,7 +25,7 @@ type TemplateData struct {
 	Temperature                   string
 }
 
-type emailTemplate struct {
+type reportTemplate struct {
 	ReportType string
 	Timestamp  string
 	Template   []TemplateData
@@ -41,7 +41,7 @@ func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateH
 }
 
 var aggregatedReport TemplateData
-var emailData emailTemplate
+var emailData reportTemplate
 var subject string
 var unreachableFlag bool
 
@@ -73,7 +73,7 @@ func (aggregate *Aggregate) Start(IPs *[]string) {
 				if unreachableFlag {
 					subject += ": 1 or more towers is down!"
 				}
-				Mail(subject, emailData)
+				MailReport(subject, emailData)
 			}
 		case msg := <-aggregate.statusChan:
 			reportAggregate[time.Now()] = msg
