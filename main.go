@@ -99,7 +99,7 @@ func main() {
 			if err != nil {
 				fmt.Printf("Error converting %s to integer, critical temperature set to default (200)", conf.CriticalTemp)
 			}
-			fmt.Printf("Program will notify user if temperature is above %v\n", conf.CriticalTemp)
+			//fmt.Printf("Program will notify user if temperature is above %v\n", conf.CriticalTemp)
 		}
 
 		aggregate := report.NewAggregate(statusCh, aggregatePeriod, aggregateHour, criticalTemp)
