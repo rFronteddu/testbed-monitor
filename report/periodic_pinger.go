@@ -43,8 +43,9 @@ func (monitor *Monitor) Start(IP string, period int) {
 				fmt.Printf("Testbed %s was reached at %s\n", IP, monitor.lastReachable.String())
 			} else {
 				fmt.Printf("Testbed %s could not be reached.\n", IP)
+				emailDataN.Timestamp = time.Now().Format("Jan 02 2006 15:04:05")
 				if dailyFlag == false {
-					subjectN := emailDataN.TestbedIP + " could not be reached at " + emailData.Timestamp
+					subjectN := emailDataN.TestbedIP + " could not be reached at " + emailDataN.Timestamp
 					MailNotification(subjectN, emailDataN)
 					dailyFlag = true
 				}

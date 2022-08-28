@@ -14,6 +14,6 @@ CRITICAL_TEMP: "200"
 # If the program should monitor a testbed via ping, set MONITOR_TESTBED to true
 MONITOR_TESTBED: true
 # Provide the IP address of the testbed to be monitored
-TESTBED_IP: "127.0.0.1"
+TESTBED_IP: "1.1.1.1"
 # How often the testbed should be pinged
 PING_PERIOD: "30"
