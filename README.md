@@ -19,14 +19,25 @@ DESTINATION=
 ```
 The **configuration.yaml** file should declare the following variables:
 ```
+# If the program should monitor hosts, set MONITOR_HOSTS to true
+MONITOR_HOSTS: false
 # The port the receiver runs on
-RECEIVE_PORT: 
+RECEIVE_PORT: "8758"
 # How often the system checks if it is time to send a report
-AGGREGATE_PERIOD: 
+AGGREGATE_PERIOD: "2"
 # The hour the report is sent
-AGGREGATE_HOUR: 
+AGGREGATE_HOUR: "23"
 # How long should the receiver wait for a host report before trying to ping
-EXPECTED_REPORT_PERIOD: 
+EXPECTED_REPORT_PERIOD: "1"
+# What temperature should trigger a warning notification
+CRITICAL_TEMP: "200"
+
+# If the program should monitor a testbed via ping, set MONITOR_TESTBED to true
+MONITOR_TESTBED: true
+# Provide the IP address of the testbed to be monitored
+TESTBED_IP: "127.0.0.1"
+# How often the testbed should be pinged
+PING_PERIOD: "30"
 ```
 
 ## Installation

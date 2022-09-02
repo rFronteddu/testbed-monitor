@@ -19,6 +19,7 @@ message StatusReport {
     int64 CPUAvg = 10; // measure.Integers["CPU_AVG"]
     google.protobuf.Timestamp timestamp = 11; // the time when this measure was collected
     bool reachable = 12; // has this tower been reached within the expected time?
+    int64 temperature = 13; // temperature from arduino controller mqtt report
 }
 
 // compile with: protoc --go_out=. *.proto

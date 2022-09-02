@@ -9,6 +9,7 @@ type Aggregate struct {
 	statusChan      chan *StatusReport
 	aggregatePeriod int
 	aggregateHour   int
+	criticalTemp    int
 }
 
 type TemplateData struct {
@@ -21,24 +22,26 @@ type TemplateData struct {
 	DiskUsedAvgGB                 string
 	CPUAvg                        string
 	Reachable                     bool
+	Temperature                   string
 }
 
-type emailTemplate struct {
+type reportTemplate struct {
 	ReportType string
 	Timestamp  string
 	Template   []TemplateData
 }
 
-func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateHour int) *Aggregate {
+func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateHour int, criticalTemp int) *Aggregate {
 	aggregate := new(Aggregate)
 	aggregate.statusChan = statusChan
 	aggregate.aggregatePeriod = aggregatePeriod
 	aggregate.aggregateHour = aggregateHour
+	aggregate.criticalTemp = criticalTemp
 	return aggregate
 }
 
 var aggregatedReport TemplateData
-var emailData emailTemplate
+var emailData reportTemplate
 var subject string
 var unreachableFlag bool
 
@@ -70,7 +73,7 @@ func (aggregate *Aggregate) Start(IPs *[]string) {
 				if unreachableFlag {
 					subject += ": 1 or more towers is down!"
 				}
-				Mail(subject, emailData)
+				MailReport(subject, emailData)
 			}
 		case msg := <-aggregate.statusChan:
 			reportAggregate[time.Now()] = msg
@@ -80,7 +83,7 @@ func (aggregate *Aggregate) Start(IPs *[]string) {
 
 func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateData *TemplateData) {
 	var usedRAMAvg, RAMCounter, usedDiskAvg, diskCounter, CPUAvg, CPUCounter, rebootCounter int64 = 0, 0, 0, 0, 0, 0, 0
-	var totalRAM, totalDisk int64 = 0, 0
+	var totalRAM, totalDisk, maxTemp int64 = 0, 0, 0
 	compareTime := time.Time{}
 	templateData.TowerIP = IP
 	for key, element := range reports {
@@ -100,6 +103,9 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 				}
 				if element.Reachable == false {
 					templateData.Reachable = false
+				}
+				if element.Temperature > maxTemp {
+					maxTemp = element.Temperature
 				}
 				compareTime = element.Timestamp.AsTime()
 			}
@@ -128,11 +134,12 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 	if templateData.Reachable == false {
 		unreachableFlag = true
 	}
+	templateData.Temperature = strconv.FormatInt(maxTemp, 10)
 }
 
 func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateData *TemplateData) {
 	var usedRAMAvg, RAMCounter, usedDiskAvg, diskCounter, CPUAvg, CPUCounter, rebootCounter int64 = 0, 0, 0, 0, 0, 0, 0
-	var totalRAM, totalDisk int64 = 0, 0
+	var totalRAM, totalDisk, maxTemp int64 = 0, 0, 0
 	compareTime := time.Time{}
 	templateData.TowerIP = IP
 	for key, element := range reports {
@@ -154,6 +161,9 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateDa
 				if element.Reachable == false {
 					templateData.Reachable = false
 				}
+				if element.Temperature > maxTemp {
+					maxTemp = element.Temperature
+				}
 				compareTime = element.Timestamp.AsTime()
 			}
 			rebootCounter = rebootCounter + element.RebootsCurrentDay
@@ -181,4 +191,5 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateDa
 	if templateData.Reachable == false {
 		unreachableFlag = true
 	}
+	templateData.Temperature = strconv.FormatInt(maxTemp, 10)
 }

@@ -51,9 +51,17 @@ func (r *Request) ParseTemplate(templateFileName string, data interface{}) error
 	return nil
 }
 
-func Mail(subject string, emailData emailTemplate) {
+func MailReport(subject string, emailData reportTemplate) {
 	r := NewRequest([]string{os.Getenv("DESTINATION")}, subject, "body")
-	if err := r.ParseTemplate("template.html", emailData); err == nil {
+	if err := r.ParseTemplate("report_template.html", emailData); err == nil {
+		r.SendEmail()
+		fmt.Printf("Email sent %s\n", subject)
+	}
+}
+
+func MailNotification(subject string, emailData NotificationTemplate) {
+	r := NewRequest([]string{os.Getenv("DESTINATION")}, subject, "body")
+	if err := r.ParseTemplate("notification_template.html", emailData); err == nil {
 		r.SendEmail()
 		fmt.Printf("Email sent %s\n", subject)
 	}

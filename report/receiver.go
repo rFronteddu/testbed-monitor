@@ -154,4 +154,5 @@ func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport) {
 	s.CPUAvg = m.Integers["CPU_AVG"]
 	s.Timestamp = m.Timestamp
 	s.Reachable = true
+	s.Temperature = m.Integers["MQTT_Temp"]
 }
