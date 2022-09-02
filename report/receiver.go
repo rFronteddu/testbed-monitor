@@ -43,12 +43,6 @@ func (receiver *Receiver) Start(towers *[]string) {
 	var p *pb.PingReply
 	receivedReports := map[string]time.Time{}
 
-	//////TEST//
-	//receivedReports["125.23.23.15"] = time.Now()
-	//*towers = append(*towers, "125.23.23.15")
-	//fmt.Println("Test case set")
-	//////TEST//
-
 	// Go func to receive reports
 	go func() {
 		receiver.receive(receivedReports, towers)

@@ -1,18 +1,21 @@
-# If the program should monitor hosts, set MONITOR_HOSTS to true
-MONITOR_HOSTS: false
+### If the program should monitor hosts, set MONITOR_HOSTS to true
+MONITOR_HOSTS: true
 # The port the receiver runs on
 RECEIVE_PORT: "8758"
 # How often the system checks if it is time to send a report
 AGGREGATE_PERIOD: "2"
 # The hour the report is sent
-AGGREGATE_HOUR: "22"
+AGGREGATE_HOUR: "15"
 # How long should the receiver wait for a host report before trying to ping
 EXPECTED_REPORT_PERIOD: "1"
 # What temperature should trigger a warning notification
 CRITICAL_TEMP: "200"
+# What is the MQTT broker to subscribe to
+MQTT_BROKER: #"tcp://test.mosquitto.org:1883"
+MQTT_TOPIC: #"test"
 
-# If the program should monitor a testbed via ping, set MONITOR_TESTBED to true
-MONITOR_TESTBED: true
+### If the program should monitor a testbed via ping, set MONITOR_TESTBED to true
+MONITOR_TESTBED: false
 # Provide the IP address of the testbed to be monitored
 TESTBED_IP: "127.0.0.1"
 # How often the testbed should be pinged
