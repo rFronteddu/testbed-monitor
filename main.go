@@ -8,6 +8,7 @@ import (
 	"log"
 	"strconv"
 	"testbed-monitor/measure"
+	"testbed-monitor/mqtt"
 	"testbed-monitor/report"
 )
 
@@ -21,13 +22,15 @@ type Configuration struct {
 	MonitorTestbed       bool   `yaml:"MONITOR_TESTBED"`
 	TestbedIP            string `yaml:"TESTBED_IP"`
 	PingPeriod           string `yaml:"PING_PERIOD"`
+	MQTTBroker           string `yaml:"MQTT_BROKER"`
+	MQTTTopic            string `yaml:"MQTT_TOPIC"`
 }
 
 func loadConfiguration(path string) *Configuration {
 	yfile, err := ioutil.ReadFile(path)
 	if err != nil {
 		fmt.Printf("Could not open %s error: %s\n", path, err)
-		conf := &Configuration{true, "8758", "60", "23", "30", "200", false, "", "30"}
+		conf := &Configuration{true, "8758", "60", "23", "30", "200", false, "", "30", "", ""}
 		fmt.Printf("Host Monitor will use default configuration: %v\n", conf)
 		return conf
 	}
@@ -69,6 +72,10 @@ func main() {
 		}
 		fmt.Printf("Starting report receiver on port %s...\n", conf.ReceivePort)
 		receiver.Start(&towers)
+
+		if conf.MQTTBroker != "" {
+			mqtt.NewSubscriber(conf.MQTTBroker, conf.MQTTTopic, statusCh)
+		}
 
 		aggregatePeriod := 60
 		if conf.AggregatePeriod != "" {

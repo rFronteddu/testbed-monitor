@@ -104,18 +104,22 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 				if element.Reachable == false {
 					templateData.Reachable = false
 				}
+				compareTime = element.Timestamp.AsTime()
+			}
+		}
+		rebootCounter = rebootCounter + element.RebootsCurrentDay
+		usedRAMAvg = usedRAMAvg + element.RAMUsed
+		RAMCounter++
+		usedDiskAvg = usedDiskAvg + element.DiskUsed
+		diskCounter++
+		CPUAvg = CPUAvg + element.CPUAvg
+		CPUCounter++
+		if element.Timestamp.AsTime().Day() == time.Now().Day() && element.TowerIP == IP {
+			if element.Temperature > 0 {
 				if element.Temperature > maxTemp {
 					maxTemp = element.Temperature
 				}
-				compareTime = element.Timestamp.AsTime()
 			}
-			rebootCounter = rebootCounter + element.RebootsCurrentDay
-			usedRAMAvg = usedRAMAvg + element.RAMUsed
-			RAMCounter++
-			usedDiskAvg = usedDiskAvg + element.DiskUsed
-			diskCounter++
-			CPUAvg = CPUAvg + element.CPUAvg
-			CPUCounter++
 		}
 	}
 	if RAMCounter > 0 {
@@ -134,7 +138,7 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 	if templateData.Reachable == false {
 		unreachableFlag = true
 	}
-	templateData.Temperature = strconv.FormatInt(maxTemp, 10)
+
 }
 
 func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateData *TemplateData) {
@@ -161,9 +165,6 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateDa
 				if element.Reachable == false {
 					templateData.Reachable = false
 				}
-				if element.Temperature > maxTemp {
-					maxTemp = element.Temperature
-				}
 				compareTime = element.Timestamp.AsTime()
 			}
 			rebootCounter = rebootCounter + element.RebootsCurrentDay
@@ -173,6 +174,14 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateDa
 			diskCounter++
 			CPUAvg = CPUAvg + element.CPUAvg
 			CPUCounter++
+			if element.Timestamp.AsTime().After(time.Now().Add(-7*24*time.Hour)) && element.TowerIP == IP {
+				if element.Temperature > 0 {
+					if element.Temperature > maxTemp {
+						maxTemp = element.Temperature
+					}
+				}
+			}
+
 		}
 	}
 	if RAMCounter > 0 {
