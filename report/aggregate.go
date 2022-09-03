@@ -74,6 +74,8 @@ func (aggregate *Aggregate) Start(IPs *[]string) {
 					subject += ": 1 or more towers is down!"
 				}
 				MailReport(subject, emailData)
+				// Build json array
+				// POST via REST
 			}
 		case msg := <-aggregate.statusChan:
 			reportAggregate[time.Now()] = msg
@@ -81,13 +83,13 @@ func (aggregate *Aggregate) Start(IPs *[]string) {
 	}
 }
 
-func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateData *TemplateData) {
-	var usedRAMAvg, RAMCounter, usedDiskAvg, diskCounter, CPUAvg, CPUCounter, rebootCounter int64 = 0, 0, 0, 0, 0, 0, 0
+func DailyAggregator(reports map[time.Time]*StatusReport, iP string, templateData *TemplateData) {
+	var usedRAMAvg, ramCounter, usedDiskAvg, diskCounter, cpuAvg, cpuCounter, rebootCounter int64 = 0, 0, 0, 0, 0, 0, 0
 	var totalRAM, totalDisk, maxTemp int64 = 0, 0, 0
 	compareTime := time.Time{}
-	templateData.TowerIP = IP
+	templateData.TowerIP = iP
 	for key, element := range reports {
-		if key.Day() == time.Now().Day() && element.TowerIP == IP {
+		if key.Day() == time.Now().Day() && element.TowerIP == iP {
 			if element.Timestamp.AsTime().After(compareTime) {
 				templateData.Reachable = true
 				if element.Reachable == true {
@@ -109,12 +111,12 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 		}
 		rebootCounter = rebootCounter + element.RebootsCurrentDay
 		usedRAMAvg = usedRAMAvg + element.RAMUsed
-		RAMCounter++
+		ramCounter++
 		usedDiskAvg = usedDiskAvg + element.DiskUsed
 		diskCounter++
-		CPUAvg = CPUAvg + element.CPUAvg
-		CPUCounter++
-		if element.Timestamp.AsTime().Day() == time.Now().Day() && element.TowerIP == IP {
+		cpuAvg = cpuAvg + element.CPUAvg
+		cpuCounter++
+		if element.Timestamp.AsTime().Day() == time.Now().Day() && element.TowerIP == iP {
 			if element.Temperature > 0 {
 				if element.Temperature > maxTemp {
 					maxTemp = element.Temperature
@@ -122,18 +124,18 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 			}
 		}
 	}
-	if RAMCounter > 0 {
-		usedRAMAvg = usedRAMAvg / RAMCounter
+	if ramCounter > 0 {
+		usedRAMAvg = usedRAMAvg / ramCounter
 	}
 	templateData.RAMUsedAvgMB = strconv.FormatInt(usedRAMAvg, 10) + "/" + strconv.FormatInt(totalRAM, 10) + " MB"
 	if diskCounter > 0 {
 		usedDiskAvg = usedDiskAvg / diskCounter
 	}
 	templateData.DiskUsedAvgGB = strconv.FormatInt(usedDiskAvg, 10) + "/" + strconv.FormatInt(totalDisk, 10) + " GB"
-	if CPUCounter > 0 {
-		CPUAvg = CPUAvg / CPUCounter
+	if cpuCounter > 0 {
+		cpuAvg = cpuAvg / cpuCounter
 	}
-	templateData.CPUAvg = strconv.FormatInt(CPUAvg, 10) + "%"
+	templateData.CPUAvg = strconv.FormatInt(cpuAvg, 10) + "%"
 	templateData.RebootsCurrentDay = strconv.FormatInt(rebootCounter, 10)
 	if templateData.Reachable == false {
 		unreachableFlag = true
@@ -141,14 +143,14 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 
 }
 
-func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateData *TemplateData) {
-	var usedRAMAvg, RAMCounter, usedDiskAvg, diskCounter, CPUAvg, CPUCounter, rebootCounter int64 = 0, 0, 0, 0, 0, 0, 0
+func WeeklyAggregator(reports map[time.Time]*StatusReport, iP string, templateData *TemplateData) {
+	var usedRAMAvg, ramCounter, usedDiskAvg, diskCounter, cpuAvg, cpuCounter, rebootCounter int64 = 0, 0, 0, 0, 0, 0, 0
 	var totalRAM, totalDisk, maxTemp int64 = 0, 0, 0
 	compareTime := time.Time{}
-	templateData.TowerIP = IP
+	templateData.TowerIP = iP
 	for key, element := range reports {
-		templateData.TowerIP = IP
-		if key.After(time.Now().Add(-7*24*time.Hour)) && element.TowerIP == IP {
+		templateData.TowerIP = iP
+		if key.After(time.Now().Add(-7*24*time.Hour)) && element.TowerIP == iP {
 			if element.Timestamp.AsTime().After(compareTime) {
 				templateData.Reachable = true
 				if element.Reachable == true {
@@ -169,12 +171,12 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateDa
 			}
 			rebootCounter = rebootCounter + element.RebootsCurrentDay
 			usedRAMAvg = usedRAMAvg + element.RAMUsed
-			RAMCounter++
+			ramCounter++
 			usedDiskAvg = usedDiskAvg + element.DiskUsed
 			diskCounter++
-			CPUAvg = CPUAvg + element.CPUAvg
-			CPUCounter++
-			if element.Timestamp.AsTime().After(time.Now().Add(-7*24*time.Hour)) && element.TowerIP == IP {
+			cpuAvg = cpuAvg + element.CPUAvg
+			cpuCounter++
+			if element.Timestamp.AsTime().After(time.Now().Add(-7*24*time.Hour)) && element.TowerIP == iP {
 				if element.Temperature > 0 {
 					if element.Temperature > maxTemp {
 						maxTemp = element.Temperature
@@ -184,18 +186,18 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateDa
 
 		}
 	}
-	if RAMCounter > 0 {
-		usedRAMAvg = usedRAMAvg / RAMCounter
+	if ramCounter > 0 {
+		usedRAMAvg = usedRAMAvg / ramCounter
 	}
 	templateData.RAMUsedAvgMB = strconv.FormatInt(usedRAMAvg, 10) + "/" + strconv.FormatInt(totalRAM, 10) + " MB"
 	if diskCounter > 0 {
 		usedDiskAvg = usedDiskAvg / diskCounter
 	}
 	templateData.DiskUsedAvgGB = strconv.FormatInt(usedDiskAvg, 10) + "/" + strconv.FormatInt(totalDisk, 10) + " GB"
-	if CPUCounter > 0 {
-		CPUAvg = CPUAvg / CPUCounter
+	if cpuCounter > 0 {
+		cpuAvg = cpuAvg / cpuCounter
 	}
-	templateData.CPUAvg = strconv.FormatInt(CPUAvg, 10) + "%"
+	templateData.CPUAvg = strconv.FormatInt(cpuAvg, 10) + "%"
 	templateData.RebootsCurrentDay = strconv.FormatInt(rebootCounter, 10)
 	if templateData.Reachable == false {
 		unreachableFlag = true

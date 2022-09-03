@@ -16,8 +16,6 @@ type NotificationTemplate struct {
 	Timestamp string
 }
 
-var dailyFlag = false
-
 func NewMonitor() *Monitor {
 	monitor := new(Monitor)
 	monitor.lastReachable = time.Time{}
@@ -26,6 +24,7 @@ func NewMonitor() *Monitor {
 
 func (monitor *Monitor) Start(IP string, period int) {
 	fmt.Printf("Starting periodic pinger...\n")
+	dailyFlag := false
 	replyCh := make(chan *pb.PingReply)
 	var p *pb.PingReply
 	var emailDataN NotificationTemplate
