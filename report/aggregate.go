@@ -1,6 +1,12 @@
 package report
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"log"
+	"net"
+	"net/http"
 	"strconv"
 	"time"
 )
@@ -10,33 +16,37 @@ type Aggregate struct {
 	aggregatePeriod int
 	aggregateHour   int
 	criticalTemp    int
+	myIP            string
+	apiPort         string
 }
 
 type TemplateData struct {
-	TowerIP                       string
-	LastArduinoReachableTimestamp string
-	LastTowerReachableTimestamp   string
-	BootTimestamp                 string
-	RebootsCurrentDay             string
-	RAMUsedAvgMB                  string
-	DiskUsedAvgGB                 string
-	CPUAvg                        string
-	Reachable                     bool
-	Temperature                   string
+	TowerIP                       string `json:"TowerIP"`
+	LastArduinoReachableTimestamp string `json:"LastArduinoReachableTimestamp"`
+	LastTowerReachableTimestamp   string `json:"LastTowerReachableTimestamp"`
+	BootTimestamp                 string `json:"BootTimestamp"`
+	RebootsCurrentDay             string `json:"RebootsCurrentDay"`
+	RAMUsedAvgMB                  string `json:"RAMUsedAvgMB"`
+	DiskUsedAvgGB                 string `json:"DiskUsedAvgGB"`
+	CPUAvg                        string `json:"CPUAvg"`
+	Reachable                     bool   `json:"Reachable"`
+	Temperature                   string `json:"Temperature"`
 }
 
 type reportTemplate struct {
-	ReportType string
-	Timestamp  string
-	Template   []TemplateData
+	ReportType string         `json:"ReportType"`
+	Timestamp  string         `json:"Timestamp"`
+	Template   []TemplateData `json:"TemplateData"`
 }
 
-func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateHour int, criticalTemp int) *Aggregate {
+func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateHour int, criticalTemp int, apiPort string) *Aggregate {
 	aggregate := new(Aggregate)
 	aggregate.statusChan = statusChan
 	aggregate.aggregatePeriod = aggregatePeriod
 	aggregate.aggregateHour = aggregateHour
 	aggregate.criticalTemp = criticalTemp
+	aggregate.myIP = string(GetOutboundIP())
+	aggregate.apiPort = apiPort
 	return aggregate
 }
 
@@ -45,7 +55,7 @@ var emailData reportTemplate
 var subject string
 var unreachableFlag bool
 
-func (aggregate *Aggregate) Start(IPs *[]string) {
+func (aggregate *Aggregate) Start(iPs *[]string) {
 	dailyTicker := time.NewTicker(time.Duration(aggregate.aggregatePeriod) * time.Minute)
 	reportAggregate := make(map[time.Time]*StatusReport)
 	var i int
@@ -56,14 +66,14 @@ func (aggregate *Aggregate) Start(IPs *[]string) {
 				emailData.Template = nil
 				unreachableFlag = false
 				if time.Now().Weekday().String() == "Sunday" { // Weekly report on Sundays
-					for i = 0; i < len(*IPs); i++ {
-						WeeklyAggregator(reportAggregate, (*IPs)[i], &aggregatedReport)
+					for i = 0; i < len(*iPs); i++ {
+						weeklyAggregator(reportAggregate, (*iPs)[i], &aggregatedReport)
 						emailData.Template = append(emailData.Template, aggregatedReport)
 					}
 					emailData.ReportType = "Weekly"
 				} else { // Daily report
-					for i = 0; i < len(*IPs); i++ {
-						DailyAggregator(reportAggregate, (*IPs)[i], &aggregatedReport)
+					for i = 0; i < len(*iPs); i++ {
+						dailyAggregator(reportAggregate, (*iPs)[i], &aggregatedReport)
 						emailData.Template = append(emailData.Template, aggregatedReport)
 					}
 					emailData.ReportType = "Daily"
@@ -74,16 +84,38 @@ func (aggregate *Aggregate) Start(IPs *[]string) {
 					subject += ": 1 or more towers is down!"
 				}
 				MailReport(subject, emailData)
-				// Build json array
-				// POST via REST
+				aggregate.postStatusToApp(emailData)
 			}
 		case msg := <-aggregate.statusChan:
 			reportAggregate[time.Now()] = msg
+			if !msg.Reachable {
+				aggregate.towerAlertInApp(msg.TowerIP)
+			}
 		}
 	}
 }
 
-func DailyAggregator(reports map[time.Time]*StatusReport, iP string, templateData *TemplateData) {
+func (aggregate *Aggregate) postStatusToApp(emailData reportTemplate) {
+	apiAddress := aggregate.myIP + ":" + aggregate.apiPort
+	jsonReport, errJ := json.Marshal(emailData)
+	if errJ != nil {
+		fmt.Println("Error creating json object: ", errJ)
+	}
+	_, err := http.Post("http://"+apiAddress+"/towers", "application/json", bytes.NewBuffer(jsonReport))
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func (aggregate *Aggregate) towerAlertInApp(alertIP string) {
+	apiAddress := aggregate.myIP + ":" + aggregate.apiPort
+	_, err := http.Get("http://" + apiAddress + "/alert/" + alertIP)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func dailyAggregator(reports map[time.Time]*StatusReport, iP string, templateData *TemplateData) {
 	var usedRAMAvg, ramCounter, usedDiskAvg, diskCounter, cpuAvg, cpuCounter, rebootCounter int64 = 0, 0, 0, 0, 0, 0, 0
 	var totalRAM, totalDisk, maxTemp int64 = 0, 0, 0
 	compareTime := time.Time{}
@@ -103,7 +135,7 @@ func DailyAggregator(reports map[time.Time]*StatusReport, iP string, templateDat
 				if totalDisk == 0 {
 					totalDisk = element.DiskTotal
 				}
-				if element.Reachable == false {
+				if !element.Reachable {
 					templateData.Reachable = false
 				}
 				compareTime = element.Timestamp.AsTime()
@@ -143,7 +175,7 @@ func DailyAggregator(reports map[time.Time]*StatusReport, iP string, templateDat
 
 }
 
-func WeeklyAggregator(reports map[time.Time]*StatusReport, iP string, templateData *TemplateData) {
+func weeklyAggregator(reports map[time.Time]*StatusReport, iP string, templateData *TemplateData) {
 	var usedRAMAvg, ramCounter, usedDiskAvg, diskCounter, cpuAvg, cpuCounter, rebootCounter int64 = 0, 0, 0, 0, 0, 0, 0
 	var totalRAM, totalDisk, maxTemp int64 = 0, 0, 0
 	compareTime := time.Time{}
@@ -164,7 +196,7 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, iP string, templateDa
 				if totalDisk == 0 {
 					totalDisk = element.DiskTotal
 				}
-				if element.Reachable == false {
+				if !element.Reachable {
 					templateData.Reachable = false
 				}
 				compareTime = element.Timestamp.AsTime()
@@ -203,4 +235,14 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, iP string, templateDa
 		unreachableFlag = true
 	}
 	templateData.Temperature = strconv.FormatInt(maxTemp, 10)
+}
+
+func GetOutboundIP() net.IP {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+	return localAddr.IP
 }

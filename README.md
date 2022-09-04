@@ -42,6 +42,9 @@ MONITOR_TESTBED: true
 TESTBED_IP: "127.0.0.1"
 # How often the testbed should be pinged
 PING_PERIOD: "30"
+
+# The port to post/get data to the API
+API_PORT: "4100"
 ```
 
 ## Installation
