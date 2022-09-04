@@ -22,12 +22,14 @@ func NewSubscriber(broker string, topic string, mqttCh chan *report.StatusReport
 	options.AddBroker(broker)
 	options.SetClientID("Host-monitor")
 	messagePubHandler := func(client mqtt.Client, msg mqtt.Message) {
-		tower, temperature, timestamp := Parse(msg.Payload())
-		r := &report.StatusReport{}
-		r.TowerIP = tower
-		r.Temperature = int64(temperature)
-		r.Timestamp = timestamppb.New(timestamp)
-		mqttCh <- r
+		if ContainsTemperature(msg.Payload()) {
+			tower, temperature, timestamp := Parse(msg.Payload())
+			r := &report.StatusReport{}
+			r.TowerIP = tower
+			r.Temperature = int64(temperature)
+			r.Timestamp = timestamppb.New(timestamp)
+			mqttCh <- r
+		}
 	}
 	options.SetDefaultPublishHandler(messagePubHandler)
 	connectHandler := func(client mqtt.Client) {

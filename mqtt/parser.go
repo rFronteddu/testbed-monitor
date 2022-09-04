@@ -26,6 +26,21 @@ type Location struct {
 	Longitude string `json:"long"`
 }
 
+func ContainsTemperature(data []byte) (containsTemperature bool) {
+	var message Message
+	err := json.Unmarshal(data, &message)
+	if err != nil {
+		fmt.Println(err)
+	}
+	containsTemperature = false
+	for i := range message.Measurement {
+		if message.Measurement[i].Name == "temperature" {
+			containsTemperature = true
+		}
+	}
+	return containsTemperature
+}
+
 func Parse(data []byte) (tower string, temperature int, timestamp time.Time) {
 	var message Message
 	err := json.Unmarshal(data, &message)
