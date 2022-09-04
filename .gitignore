@@ -28,4 +28,5 @@ go.work
 
 # Output file
 testbed-monitor
+main
 

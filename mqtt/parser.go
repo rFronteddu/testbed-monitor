@@ -38,17 +38,21 @@ func Parse(data []byte) (tower string, temperature int, timestamp time.Time) {
 	timeToken := strings.Split(message.Time, ":")
 	utime, errt := strconv.Atoi(timeToken[1])
 	if errt != nil {
-		fmt.Println(errt)
+		fmt.Println("Could not parse time\n", errt)
 	}
 	timestamp = time.Unix(int64(utime), 0)
 
-	var tempT string
+	var temperatureS string
 	for i := range message.Measurement {
 		if message.Measurement[i].Name == "temperature" {
-			tempT = message.Measurement[i].Value
+			temperatureS = message.Measurement[i].Value
 		}
 	}
-	temperature, errt = strconv.Atoi(tempT)
+	temperatureF, errF := strconv.ParseFloat(temperatureS, 64)
+	if errF != nil {
+		fmt.Println("Could not parse temperature\n", errF)
+	}
+	temperature = int(temperatureF)
 
 	return tower, temperature, timestamp
 }
