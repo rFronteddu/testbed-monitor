@@ -15,6 +15,7 @@ HOST=
 # The SMTP port
 MAIL_PORT=
 # The email to send the report to
+# Multiple emails can be separated with a comma, ex: DESTINATION=email1,email2,email3
 DESTINATION=
 ```
 The **configuration.yaml** file should declare the following variables:
@@ -31,6 +32,9 @@ AGGREGATE_HOUR: "23"
 EXPECTED_REPORT_PERIOD: "1"
 # What temperature should trigger a warning notification
 CRITICAL_TEMP: "200"
+# MQTT subscription information
+MQTTBroker: ""
+MQTTTopic: ""
 
 # If the program should monitor a testbed via ping, set MONITOR_TESTBED to true
 MONITOR_TESTBED: true

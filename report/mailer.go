@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"net/smtp"
 	"os"
+	"strings"
 )
 
 const MIME = "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
@@ -28,8 +29,12 @@ func (r *Request) SendEmail() (bool, error) {
 	mime := MIME
 	subject := "Subject: " + r.subject + "\n"
 	msg := []byte(subject + mime + "\n" + r.body)
+	host := os.Getenv("HOST")
+	mailPort := os.Getenv("MAIL_PORT")
+	fromEmail := os.Getenv("EMAIL")
+	password := os.Getenv("PASSWORD")
 
-	if err := smtp.SendMail(os.Getenv("HOST")+":"+os.Getenv("MAIL_PORT"), smtp.PlainAuth("", os.Getenv("EMAIL"), os.Getenv("PASSWORD"), os.Getenv("HOST")), os.Getenv("EMAIL"), r.to, msg); err != nil {
+	if err := smtp.SendMail(host+":"+mailPort, smtp.PlainAuth("", fromEmail, password, host), fromEmail, r.to, msg); err != nil {
 		fmt.Printf("Error sending email: %s", err)
 		return false, err
 	}
@@ -52,7 +57,9 @@ func (r *Request) ParseTemplate(templateFileName string, data interface{}) error
 }
 
 func MailReport(subject string, emailData reportTemplate) {
-	r := NewRequest([]string{os.Getenv("DESTINATION")}, subject, "body")
+	toEmails := os.Getenv("DESTINATION")
+	destination := strings.Split(toEmails, ",")
+	r := NewRequest(destination, subject, "body")
 	if err := r.ParseTemplate("report_template.html", emailData); err == nil {
 		r.SendEmail()
 		fmt.Printf("Email sent %s\n", subject)
@@ -60,7 +67,9 @@ func MailReport(subject string, emailData reportTemplate) {
 }
 
 func MailNotification(subject string, emailData NotificationTemplate) {
-	r := NewRequest([]string{os.Getenv("DESTINATION")}, subject, "body")
+	toEmails := os.Getenv("DESTINATION")
+	destination := strings.Split(toEmails, ",")
+	r := NewRequest(destination, subject, "body")
 	if err := r.ParseTemplate("notification_template.html", emailData); err == nil {
 		r.SendEmail()
 		fmt.Printf("Email sent %s\n", subject)
