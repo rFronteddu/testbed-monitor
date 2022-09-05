@@ -71,7 +71,7 @@ func main() {
 		}
 		receiver, err := report.NewReportReceiver(measureCh, statusCh, conf.ReceivePort, expectedReportPeriod)
 		if err != nil {
-			fmt.Printf("Fatal error %s while creating the report.Receiver, aborting\n", err)
+			log.Fatal("Fatal error %s while creating the report.Receiver, aborting...\n", err)
 		}
 		fmt.Printf("Starting report receiver on port %s...\n", conf.ReceivePort)
 		receiver.Start(&towers)

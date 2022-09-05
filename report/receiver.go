@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/protobuf/proto"
+	"log"
 	"net"
 	"strings"
 	"testbed-monitor/measure"
@@ -26,10 +27,12 @@ func NewReportReceiver(measureCh chan *measure.Measure, statusCh chan *StatusRep
 	receiver.statusCh = statusCh
 	s, err := net.ResolveUDPAddr("udp4", ":"+receivePort)
 	if err != nil {
+		log.Panic("Unable to resolve address ", s, "\n", err)
 		return nil, err
 	}
 	connection, err := net.ListenUDP("udp4", s)
 	if err != nil {
+		log.Panic("Unable to listen on ", s, "\n", err)
 		return nil, err
 	}
 	receiver.connection = connection
