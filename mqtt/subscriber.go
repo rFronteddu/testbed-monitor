@@ -1,10 +1,9 @@
 package mqtt
 
 import (
-	"fmt"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"os"
+	"log"
 	"testbed-monitor/report"
 )
 
@@ -33,11 +32,11 @@ func NewSubscriber(broker string, topic string, mqttCh chan *report.StatusReport
 	}
 	options.SetDefaultPublishHandler(messagePubHandler)
 	connectHandler := func(client mqtt.Client) {
-		fmt.Println("Subscriber connected")
+		log.Println("Subscriber connected")
 	}
 	options.OnConnect = connectHandler
 	connectionLostHandler := func(client mqtt.Client, err error) {
-		fmt.Printf("Subscriber connection Lost: %s\n", err.Error())
+		log.Printf("Subscriber connection Lost: %s\n", err.Error())
 	}
 	options.OnConnectionLost = connectionLostHandler
 
@@ -47,8 +46,7 @@ func NewSubscriber(broker string, topic string, mqttCh chan *report.StatusReport
 	}
 
 	if token := client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
-		fmt.Println(token.Error())
-		os.Exit(1)
+		log.Fatal(token.Error())
 	}
 
 }

@@ -1,7 +1,7 @@
 package probers
 
 import (
-	"fmt"
+	"log"
 	"net"
 	pb "testbed-monitor/pinger"
 )
@@ -20,7 +20,7 @@ func NewICMPProbe(target string, replyCh chan *pb.PingReply) *ICMPProbe {
 
 func (icmpP *ICMPProbe) Start() {
 	if net.ParseIP(icmpP.target) == nil {
-		fmt.Printf("An invalid IP (%s) was provided to ICMP Probe, aborting\n", icmpP.target)
+		log.Fatalf("An invalid IP (%s) was provided to ICMP Probe, aborting\n", icmpP.target)
 		return
 	}
 	go icmpP.ping()

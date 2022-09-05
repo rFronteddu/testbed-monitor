@@ -3,7 +3,6 @@ package report
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -99,11 +98,11 @@ func (aggregate *Aggregate) postStatusToApp(emailData reportTemplate) {
 	apiAddress := aggregate.myIP + ":" + aggregate.apiPort
 	jsonReport, errJ := json.Marshal(emailData)
 	if errJ != nil {
-		fmt.Println("Error creating json object: ", errJ)
+		log.Println("Error creating json object: ", errJ)
 	}
 	_, err := http.Post("http://"+apiAddress+"/towers", "application/json", bytes.NewBuffer(jsonReport))
 	if err != nil {
-		fmt.Println(err)
+		log.Println("Error posting to API", err)
 	}
 }
 
@@ -111,7 +110,7 @@ func (aggregate *Aggregate) towerAlertInApp(alertIP string) {
 	apiAddress := aggregate.myIP + ":" + aggregate.apiPort
 	_, err := http.Get("http://" + apiAddress + "/alert/" + alertIP)
 	if err != nil {
-		fmt.Println(err)
+		log.Println("Error posting to API", err)
 	}
 }
 

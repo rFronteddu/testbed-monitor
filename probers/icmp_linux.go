@@ -4,7 +4,6 @@ package probers
 
 import (
 	"bytes"
-	"fmt"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -20,7 +19,7 @@ func ping(target string, replyCh chan *pb.PingReply) {
 	err := cmd.Run()
 	if err != nil {
 		// was not able to ping
-		fmt.Printf("Probe was not able to reach %s\n", target)
+		log.Printf("Probe was not able to reach %s\n", target)
 		replyCh <- &pb.PingReply{
 			Reachable:      false,
 			AvgRtt:         0,
@@ -36,10 +35,9 @@ func ping(target string, replyCh chan *pb.PingReply) {
 	tokens := strings.Split(out.String(), "\n")
 	for _, token := range tokens {
 		if strings.Contains(token, "unreachable") {
-			fmt.Printf("Destination %s unreachable\n", target)
+			log.Printf("Destination %s unreachable\n", target)
 		}
 		if strings.Contains(token, "packets transmitted") {
-			fmt.Println("Parsing: " + token)
 			loss = extractStats(token)
 			if loss == 100 {
 				break
@@ -48,12 +46,11 @@ func ping(target string, replyCh chan *pb.PingReply) {
 			}
 		}
 		if strings.Contains(token, "rtt min/avg/max/mdev") {
-			fmt.Println("Parsing: " + token)
 			rtt = extractRTT(token)
 		}
 	}
 
-	fmt.Printf("Loss: %v Avg rtt: %v\n", loss, rtt)
+	log.Printf("Loss: %v Avg rtt: %v\n", loss, rtt)
 
 	replyCh <- &pb.PingReply{
 		Reachable:      reachable,
@@ -73,9 +70,9 @@ func extractRTT(token string) int {
 	s := strings.Replace(token, "rtt min/avg/max/mdev =", "", -1)
 	s1 := strings.Replace(s, "ms", "", -1)
 	s2 := strings.TrimSpace(s1)
-	fmt.Println("S2: " + s2)
+	log.Println("S2: " + s2)
 	tokens := strings.Split(s2, "/")
-	fmt.Println("RTT: " + tokens[1])
+	log.Println("RTT: " + tokens[1])
 	rtt, _ := strconv.ParseFloat(tokens[1], 32)
 	return int(rtt)
 }

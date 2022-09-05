@@ -2,7 +2,7 @@ package mqtt
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -30,7 +30,7 @@ func ContainsTemperature(data []byte) (containsTemperature bool) {
 	var message Message
 	err := json.Unmarshal(data, &message)
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("Error unmarshalling json: %s\n", err)
 	}
 	containsTemperature = false
 	for i := range message.Measurement {
@@ -45,7 +45,7 @@ func Parse(data []byte) (tower string, temperature int, timestamp time.Time) {
 	var message Message
 	err := json.Unmarshal(data, &message)
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("Error unmarshalling json: %s\n", err)
 	}
 
 	tower = message.Tower
@@ -53,7 +53,7 @@ func Parse(data []byte) (tower string, temperature int, timestamp time.Time) {
 	timeToken := strings.Split(message.Time, ":")
 	utime, errt := strconv.Atoi(timeToken[1])
 	if errt != nil {
-		fmt.Println("Could not parse time\n", errt)
+		log.Println("Could not parse time\n", errt)
 	}
 	timestamp = time.Unix(int64(utime), 0)
 
@@ -65,7 +65,7 @@ func Parse(data []byte) (tower string, temperature int, timestamp time.Time) {
 	}
 	temperatureF, errF := strconv.ParseFloat(temperatureS, 64)
 	if errF != nil {
-		fmt.Println("Could not parse temperature\n", errF)
+		log.Println("Could not parse temperature\n", errF)
 	}
 	temperature = int(temperatureF)
 

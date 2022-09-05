@@ -30,7 +30,7 @@ type Configuration struct {
 func loadConfiguration(path string) *Configuration {
 	yfile, err := ioutil.ReadFile(path)
 	if err != nil {
-		fmt.Printf("Could not open %s error: %s\n", path, err)
+		log.Printf("Could not open %s error: %s\n", path, err)
 		conf := &Configuration{true, "8758", "60", "23", "30", "4100", "200", false, "", "30", "", ""}
 		fmt.Printf("Host Monitor will use default configuration: %v\n", conf)
 		return conf
@@ -41,8 +41,7 @@ func loadConfiguration(path string) *Configuration {
 	conf := Configuration{}
 	err2 := yaml.Unmarshal(yfile, &conf)
 	if err2 != nil {
-		fmt.Printf("Configuration file could not be parsed, error: %s\n", err2)
-		panic(err2)
+		log.Fatalf("Configuration file could not be parsed, error: %s\n", err2)
 	}
 	fmt.Printf("Found configuration: %v\n", conf)
 	return &conf
@@ -71,7 +70,7 @@ func main() {
 		}
 		receiver, err := report.NewReportReceiver(measureCh, statusCh, conf.ReceivePort, expectedReportPeriod)
 		if err != nil {
-			log.Fatal("Fatal error %s while creating the report.Receiver, aborting...\n", err)
+			log.Fatalf("Fatal error %s while creating the report.Receiver, aborting...\n", err)
 		}
 		fmt.Printf("Starting report receiver on port %s...\n", conf.ReceivePort)
 		receiver.Start(&towers)
