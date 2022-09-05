@@ -2,7 +2,6 @@ package report
 
 import (
 	"fmt"
-	"net/http"
 	pb "testbed-monitor/pinger"
 	"testbed-monitor/probers"
 	"time"
@@ -11,7 +10,6 @@ import (
 type Monitor struct {
 	lastReachable time.Time
 	myIP          string
-	apiPort       string
 }
 
 type NotificationTemplate struct {
@@ -19,11 +17,10 @@ type NotificationTemplate struct {
 	Timestamp string
 }
 
-func NewMonitor(apiPort string) *Monitor {
+func NewMonitor() *Monitor {
 	monitor := new(Monitor)
 	monitor.lastReachable = time.Time{}
 	monitor.myIP = string(GetOutboundIP())
-	monitor.apiPort = apiPort
 	return monitor
 }
 
@@ -51,7 +48,6 @@ func (monitor *Monitor) Start(ip string, period int) {
 				if !dailyFlag {
 					subjectN := emailDataN.TestbedIP + " could not be reached at " + emailDataN.Timestamp
 					MailNotification(subjectN, emailDataN)
-					monitor.towerAlertInApp(ip)
 					dailyFlag = true
 				}
 			}
@@ -67,12 +63,4 @@ func (monitor *Monitor) Start(ip string, period int) {
 			}
 		}
 	}()
-}
-
-func (monitor *Monitor) towerAlertInApp(alertIP string) {
-	apiAddress := monitor.myIP + ":" + monitor.apiPort
-	_, err := http.Get("http://" + apiAddress + "/alert/" + alertIP)
-	if err != nil {
-		fmt.Println(err)
-	}
 }

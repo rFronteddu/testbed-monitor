@@ -55,12 +55,12 @@ func main() {
 	}
 
 	conf := loadConfiguration("configuration.yaml")
-	apiPort := conf.APIPort
-	fmt.Printf("Data will be posted to the API on port %s\n", conf.APIPort)
 	if conf.MonitorHosts {
 		measureCh := make(chan *measure.Measure)
 		statusCh := make(chan *report.StatusReport)
 		var towers []string
+		apiPort := conf.APIPort
+		fmt.Printf("Data will be posted to the API on port %s\n", conf.APIPort)
 		expectedReportPeriod := 30
 		if conf.ExpectedReportPeriod != "" {
 			expectedReportPeriod, err = strconv.Atoi(conf.ExpectedReportPeriod)
@@ -119,7 +119,7 @@ func main() {
 			}
 			fmt.Printf("Program will ping testbed %s every %v minutes\n", conf.TestbedIP, conf.PingPeriod)
 		}
-		monitor := report.NewMonitor(apiPort)
+		monitor := report.NewMonitor()
 		monitor.Start(testbedIP, pingPeriod)
 	}
 
