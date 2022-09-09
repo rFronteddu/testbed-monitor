@@ -18,6 +18,7 @@ type Configuration struct {
 	AggregatePeriod      string `yaml:"AGGREGATE_PERIOD"`
 	AggregateHour        string `yaml:"AGGREGATE_HOUR"`
 	ExpectedReportPeriod string `yaml:"EXPECTED_REPORT_PERIOD"`
+	APIPort              string `yaml:"API_PORT"`
 	CriticalTemp         string `yaml:"CRITICAL_TEMP"`
 	MonitorTestbed       bool   `yaml:"MONITOR_TESTBED"`
 	TestbedIP            string `yaml:"TESTBED_IP"`
@@ -29,8 +30,8 @@ type Configuration struct {
 func loadConfiguration(path string) *Configuration {
 	yfile, err := ioutil.ReadFile(path)
 	if err != nil {
-		fmt.Printf("Could not open %s error: %s\n", path, err)
-		conf := &Configuration{true, "8758", "60", "23", "30", "200", false, "", "30", "", ""}
+		log.Printf("Could not open %s error: %s\n", path, err)
+		conf := &Configuration{true, "8758", "60", "23", "30", "4100", "200", false, "", "30", "", ""}
 		fmt.Printf("Host Monitor will use default configuration: %v\n", conf)
 		return conf
 	}
@@ -40,8 +41,7 @@ func loadConfiguration(path string) *Configuration {
 	conf := Configuration{}
 	err2 := yaml.Unmarshal(yfile, &conf)
 	if err2 != nil {
-		fmt.Printf("Configuration file could not be parsed, error: %s\n", err2)
-		panic(err2)
+		log.Fatalf("Configuration file could not be parsed, error: %s\n", err2)
 	}
 	fmt.Printf("Found configuration: %v\n", conf)
 	return &conf
@@ -58,6 +58,8 @@ func main() {
 		measureCh := make(chan *measure.Measure)
 		statusCh := make(chan *report.StatusReport)
 		var towers []string
+		apiPort := conf.APIPort
+		fmt.Printf("Data will be posted to the API on port %s\n", conf.APIPort)
 		expectedReportPeriod := 30
 		if conf.ExpectedReportPeriod != "" {
 			expectedReportPeriod, err = strconv.Atoi(conf.ExpectedReportPeriod)
@@ -68,7 +70,7 @@ func main() {
 		}
 		receiver, err := report.NewReportReceiver(measureCh, statusCh, conf.ReceivePort, expectedReportPeriod)
 		if err != nil {
-			fmt.Printf("Fatal error %s while creating the report.Receiver, aborting\n", err)
+			log.Fatalf("Fatal error %s while creating the report.Receiver, aborting...\n", err)
 		}
 		fmt.Printf("Starting report receiver on port %s...\n", conf.ReceivePort)
 		receiver.Start(&towers)
@@ -102,7 +104,7 @@ func main() {
 			//fmt.Printf("Program will notify user if temperature is above %v\n", conf.CriticalTemp)
 		}
 
-		aggregate := report.NewAggregate(statusCh, aggregatePeriod, aggregateHour, criticalTemp)
+		aggregate := report.NewAggregate(statusCh, aggregatePeriod, aggregateHour, criticalTemp, apiPort)
 		aggregate.Start(&towers)
 	}
 

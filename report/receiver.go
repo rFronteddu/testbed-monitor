@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/protobuf/proto"
+	"log"
 	"net"
 	"strings"
 	"testbed-monitor/measure"
@@ -26,10 +27,12 @@ func NewReportReceiver(measureCh chan *measure.Measure, statusCh chan *StatusRep
 	receiver.statusCh = statusCh
 	s, err := net.ResolveUDPAddr("udp4", ":"+receivePort)
 	if err != nil {
+		log.Panicf("Unable to resolve address %s\n%s\n", s, err)
 		return nil, err
 	}
 	connection, err := net.ListenUDP("udp4", s)
 	if err != nil {
+		log.Panicf("Unable to listen on %s\n%s\n", s, err)
 		return nil, err
 	}
 	receiver.connection = connection
@@ -52,15 +55,15 @@ func (receiver *Receiver) Start(towers *[]string) {
 		for range ticker.C {
 			for key, element := range receivedReports {
 				if time.Now().After(element.Add(time.Duration(receiver.expectedReportPeriod) * time.Minute)) {
-					fmt.Printf("Haven't received a report from %s in %v minutes. Attempting to ping...\n", key, receiver.expectedReportPeriod)
+					log.Printf("Haven't received a report from %s in %v minutes. Attempting to ping...\n", key, receiver.expectedReportPeriod)
 					icmp := probers.NewICMPProbe(key, replyCh)
 					icmp.Start()
 					p = <-replyCh
 					if p.Reachable == true {
 						element = time.Now()
-						fmt.Printf("\nTower %s was reached at %s\n", key, element)
+						log.Printf("\nTower %s was reached at %s\n", key, element)
 					} else {
-						fmt.Printf("\nTower %s is unreachable!\n", key)
+						log.Printf("\nTower %s is unreachable!\n", key)
 						s := &StatusReport{}
 						s.TowerIP = key
 						s.Timestamp = &timestamp.Timestamp{Seconds: time.Now().Unix()}
@@ -76,13 +79,13 @@ func (receiver *Receiver) Start(towers *[]string) {
 func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers *[]string) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Printf("Fatal error while receiving: %s, will sleep 5 seconds before attempting to proceed\n", err)
+			log.Printf("Fatal error while receiving: %s, will sleep 5 seconds before attempting to proceed\n", err)
 			// since it will try again do not terminate
 			time.Sleep(5 * time.Second)
 		} else {
 			err := receiver.connection.Close()
 			if err != nil {
-				fmt.Printf("Fatal error: %s, while closing the udp connection\n", err)
+				log.Fatalf("Fatal error: %s, while closing the udp connection\n", err)
 			}
 		}
 	}()
@@ -91,7 +94,7 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers *
 	for {
 		n, addr, err := receiver.connection.ReadFromUDP(buffer)
 		if err != nil {
-			fmt.Printf("Fatal error: %s, while reading from udp connection\n", err)
+			log.Printf("Fatal error: %s, while reading from udp connection\n", err)
 			continue
 		}
 
@@ -103,11 +106,11 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers *
 		m := measure.Measure{}
 		err = proto.Unmarshal(buffer[0:n], &m)
 		if err != nil {
-			fmt.Printf("Fatal error %s while unmarshalling message from %s!\n", err, addr)
+			log.Printf("Fatal error %s while unmarshalling message from %s!\n", err, addr)
 			continue
 		}
 
-		fmt.Printf("Received report from %s.\nReport: %s\n", addr, m.String())
+		log.Printf("Received report from %s.\nReport: %s\n", addr, m.String())
 		receivedReports[addr.IP.String()] = time.Now()
 
 		// Check to see if this tower is new (aggregate will look at towers[])

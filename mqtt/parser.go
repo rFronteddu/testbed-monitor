@@ -2,7 +2,7 @@ package mqtt
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -26,11 +26,26 @@ type Location struct {
 	Longitude string `json:"long"`
 }
 
+func ContainsTemperature(data []byte) (containsTemperature bool) {
+	var message Message
+	err := json.Unmarshal(data, &message)
+	if err != nil {
+		log.Printf("Error unmarshalling json: %s\n", err)
+	}
+	containsTemperature = false
+	for i := range message.Measurement {
+		if message.Measurement[i].Name == "temperature" {
+			containsTemperature = true
+		}
+	}
+	return containsTemperature
+}
+
 func Parse(data []byte) (tower string, temperature int, timestamp time.Time) {
 	var message Message
 	err := json.Unmarshal(data, &message)
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("Error unmarshalling json: %s\n", err)
 	}
 
 	tower = message.Tower
@@ -38,17 +53,21 @@ func Parse(data []byte) (tower string, temperature int, timestamp time.Time) {
 	timeToken := strings.Split(message.Time, ":")
 	utime, errt := strconv.Atoi(timeToken[1])
 	if errt != nil {
-		fmt.Println(errt)
+		log.Println("Could not parse time\n", errt)
 	}
 	timestamp = time.Unix(int64(utime), 0)
 
-	var tempT string
+	var temperatureS string
 	for i := range message.Measurement {
 		if message.Measurement[i].Name == "temperature" {
-			tempT = message.Measurement[i].Value
+			temperatureS = message.Measurement[i].Value
 		}
 	}
-	temperature, errt = strconv.Atoi(tempT)
+	temperatureF, errF := strconv.ParseFloat(temperatureS, 64)
+	if errF != nil {
+		log.Println("Could not parse temperature\n", errF)
+	}
+	temperature = int(temperatureF)
 
 	return tower, temperature, timestamp
 }

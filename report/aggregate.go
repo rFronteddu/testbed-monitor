@@ -1,6 +1,11 @@
 package report
 
 import (
+	"bytes"
+	"encoding/json"
+	"log"
+	"net"
+	"net/http"
 	"strconv"
 	"time"
 )
@@ -10,33 +15,37 @@ type Aggregate struct {
 	aggregatePeriod int
 	aggregateHour   int
 	criticalTemp    int
+	myIP            string
+	apiPort         string
 }
 
 type TemplateData struct {
-	TowerIP                       string
-	LastArduinoReachableTimestamp string
-	LastTowerReachableTimestamp   string
-	BootTimestamp                 string
-	RebootsCurrentDay             string
-	RAMUsedAvgMB                  string
-	DiskUsedAvgGB                 string
-	CPUAvg                        string
-	Reachable                     bool
-	Temperature                   string
+	TowerIP                       string `json:"TowerIP"`
+	LastArduinoReachableTimestamp string `json:"LastArduinoReachableTimestamp"`
+	LastTowerReachableTimestamp   string `json:"LastTowerReachableTimestamp"`
+	BootTimestamp                 string `json:"BootTimestamp"`
+	RebootsCurrentDay             string `json:"RebootsCurrentDay"`
+	RAMUsedAvgMB                  string `json:"RAMUsedAvgMB"`
+	DiskUsedAvgGB                 string `json:"DiskUsedAvgGB"`
+	CPUAvg                        string `json:"CPUAvg"`
+	Reachable                     bool   `json:"Reachable"`
+	Temperature                   string `json:"Temperature"`
 }
 
 type reportTemplate struct {
-	ReportType string
-	Timestamp  string
-	Template   []TemplateData
+	ReportType string         `json:"ReportType"`
+	Timestamp  string         `json:"Timestamp"`
+	Template   []TemplateData `json:"TemplateData"`
 }
 
-func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateHour int, criticalTemp int) *Aggregate {
+func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateHour int, criticalTemp int, apiPort string) *Aggregate {
 	aggregate := new(Aggregate)
 	aggregate.statusChan = statusChan
 	aggregate.aggregatePeriod = aggregatePeriod
 	aggregate.aggregateHour = aggregateHour
 	aggregate.criticalTemp = criticalTemp
+	aggregate.myIP = string(GetOutboundIP())
+	aggregate.apiPort = apiPort
 	return aggregate
 }
 
@@ -45,7 +54,7 @@ var emailData reportTemplate
 var subject string
 var unreachableFlag bool
 
-func (aggregate *Aggregate) Start(IPs *[]string) {
+func (aggregate *Aggregate) Start(iPs *[]string) {
 	dailyTicker := time.NewTicker(time.Duration(aggregate.aggregatePeriod) * time.Minute)
 	reportAggregate := make(map[time.Time]*StatusReport)
 	var i int
@@ -56,14 +65,14 @@ func (aggregate *Aggregate) Start(IPs *[]string) {
 				emailData.Template = nil
 				unreachableFlag = false
 				if time.Now().Weekday().String() == "Sunday" { // Weekly report on Sundays
-					for i = 0; i < len(*IPs); i++ {
-						WeeklyAggregator(reportAggregate, (*IPs)[i], &aggregatedReport)
+					for i = 0; i < len(*iPs); i++ {
+						weeklyAggregator(reportAggregate, (*iPs)[i], &aggregatedReport)
 						emailData.Template = append(emailData.Template, aggregatedReport)
 					}
 					emailData.ReportType = "Weekly"
 				} else { // Daily report
-					for i = 0; i < len(*IPs); i++ {
-						DailyAggregator(reportAggregate, (*IPs)[i], &aggregatedReport)
+					for i = 0; i < len(*iPs); i++ {
+						dailyAggregator(reportAggregate, (*iPs)[i], &aggregatedReport)
 						emailData.Template = append(emailData.Template, aggregatedReport)
 					}
 					emailData.ReportType = "Daily"
@@ -74,20 +83,44 @@ func (aggregate *Aggregate) Start(IPs *[]string) {
 					subject += ": 1 or more towers is down!"
 				}
 				MailReport(subject, emailData)
+				aggregate.postStatusToApp(emailData)
 			}
 		case msg := <-aggregate.statusChan:
 			reportAggregate[time.Now()] = msg
+			if !msg.Reachable {
+				aggregate.towerAlertInApp(msg.TowerIP)
+			}
 		}
 	}
 }
 
-func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateData *TemplateData) {
-	var usedRAMAvg, RAMCounter, usedDiskAvg, diskCounter, CPUAvg, CPUCounter, rebootCounter int64 = 0, 0, 0, 0, 0, 0, 0
+func (aggregate *Aggregate) postStatusToApp(emailData reportTemplate) {
+	apiAddress := aggregate.myIP + ":" + aggregate.apiPort
+	jsonReport, errJ := json.Marshal(emailData)
+	if errJ != nil {
+		log.Println("Error creating json object: ", errJ)
+	}
+	_, err := http.Post("http://"+apiAddress+"/towers", "application/json", bytes.NewBuffer(jsonReport))
+	if err != nil {
+		log.Println("Error posting to API", err)
+	}
+}
+
+func (aggregate *Aggregate) towerAlertInApp(alertIP string) {
+	apiAddress := aggregate.myIP + ":" + aggregate.apiPort
+	_, err := http.Get("http://" + apiAddress + "/alert/" + alertIP)
+	if err != nil {
+		log.Println("Error posting to API", err)
+	}
+}
+
+func dailyAggregator(reports map[time.Time]*StatusReport, iP string, templateData *TemplateData) {
+	var usedRAMAvg, ramCounter, usedDiskAvg, diskCounter, cpuAvg, cpuCounter, rebootCounter int64 = 0, 0, 0, 0, 0, 0, 0
 	var totalRAM, totalDisk, maxTemp int64 = 0, 0, 0
 	compareTime := time.Time{}
-	templateData.TowerIP = IP
+	templateData.TowerIP = iP
 	for key, element := range reports {
-		if key.Day() == time.Now().Day() && element.TowerIP == IP {
+		if key.Day() == time.Now().Day() && element.TowerIP == iP {
 			if element.Timestamp.AsTime().After(compareTime) {
 				templateData.Reachable = true
 				if element.Reachable == true {
@@ -101,7 +134,7 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 				if totalDisk == 0 {
 					totalDisk = element.DiskTotal
 				}
-				if element.Reachable == false {
+				if !element.Reachable {
 					templateData.Reachable = false
 				}
 				compareTime = element.Timestamp.AsTime()
@@ -109,12 +142,12 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 		}
 		rebootCounter = rebootCounter + element.RebootsCurrentDay
 		usedRAMAvg = usedRAMAvg + element.RAMUsed
-		RAMCounter++
+		ramCounter++
 		usedDiskAvg = usedDiskAvg + element.DiskUsed
 		diskCounter++
-		CPUAvg = CPUAvg + element.CPUAvg
-		CPUCounter++
-		if element.Timestamp.AsTime().Day() == time.Now().Day() && element.TowerIP == IP {
+		cpuAvg = cpuAvg + element.CPUAvg
+		cpuCounter++
+		if element.Timestamp.AsTime().Day() == time.Now().Day() && element.TowerIP == iP {
 			if element.Temperature > 0 {
 				if element.Temperature > maxTemp {
 					maxTemp = element.Temperature
@@ -122,18 +155,18 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 			}
 		}
 	}
-	if RAMCounter > 0 {
-		usedRAMAvg = usedRAMAvg / RAMCounter
+	if ramCounter > 0 {
+		usedRAMAvg = usedRAMAvg / ramCounter
 	}
 	templateData.RAMUsedAvgMB = strconv.FormatInt(usedRAMAvg, 10) + "/" + strconv.FormatInt(totalRAM, 10) + " MB"
 	if diskCounter > 0 {
 		usedDiskAvg = usedDiskAvg / diskCounter
 	}
 	templateData.DiskUsedAvgGB = strconv.FormatInt(usedDiskAvg, 10) + "/" + strconv.FormatInt(totalDisk, 10) + " GB"
-	if CPUCounter > 0 {
-		CPUAvg = CPUAvg / CPUCounter
+	if cpuCounter > 0 {
+		cpuAvg = cpuAvg / cpuCounter
 	}
-	templateData.CPUAvg = strconv.FormatInt(CPUAvg, 10) + "%"
+	templateData.CPUAvg = strconv.FormatInt(cpuAvg, 10) + "%"
 	templateData.RebootsCurrentDay = strconv.FormatInt(rebootCounter, 10)
 	if templateData.Reachable == false {
 		unreachableFlag = true
@@ -141,14 +174,14 @@ func DailyAggregator(reports map[time.Time]*StatusReport, IP string, templateDat
 
 }
 
-func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateData *TemplateData) {
-	var usedRAMAvg, RAMCounter, usedDiskAvg, diskCounter, CPUAvg, CPUCounter, rebootCounter int64 = 0, 0, 0, 0, 0, 0, 0
+func weeklyAggregator(reports map[time.Time]*StatusReport, iP string, templateData *TemplateData) {
+	var usedRAMAvg, ramCounter, usedDiskAvg, diskCounter, cpuAvg, cpuCounter, rebootCounter int64 = 0, 0, 0, 0, 0, 0, 0
 	var totalRAM, totalDisk, maxTemp int64 = 0, 0, 0
 	compareTime := time.Time{}
-	templateData.TowerIP = IP
+	templateData.TowerIP = iP
 	for key, element := range reports {
-		templateData.TowerIP = IP
-		if key.After(time.Now().Add(-7*24*time.Hour)) && element.TowerIP == IP {
+		templateData.TowerIP = iP
+		if key.After(time.Now().Add(-7*24*time.Hour)) && element.TowerIP == iP {
 			if element.Timestamp.AsTime().After(compareTime) {
 				templateData.Reachable = true
 				if element.Reachable == true {
@@ -162,19 +195,19 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateDa
 				if totalDisk == 0 {
 					totalDisk = element.DiskTotal
 				}
-				if element.Reachable == false {
+				if !element.Reachable {
 					templateData.Reachable = false
 				}
 				compareTime = element.Timestamp.AsTime()
 			}
 			rebootCounter = rebootCounter + element.RebootsCurrentDay
 			usedRAMAvg = usedRAMAvg + element.RAMUsed
-			RAMCounter++
+			ramCounter++
 			usedDiskAvg = usedDiskAvg + element.DiskUsed
 			diskCounter++
-			CPUAvg = CPUAvg + element.CPUAvg
-			CPUCounter++
-			if element.Timestamp.AsTime().After(time.Now().Add(-7*24*time.Hour)) && element.TowerIP == IP {
+			cpuAvg = cpuAvg + element.CPUAvg
+			cpuCounter++
+			if element.Timestamp.AsTime().After(time.Now().Add(-7*24*time.Hour)) && element.TowerIP == iP {
 				if element.Temperature > 0 {
 					if element.Temperature > maxTemp {
 						maxTemp = element.Temperature
@@ -184,21 +217,31 @@ func WeeklyAggregator(reports map[time.Time]*StatusReport, IP string, templateDa
 
 		}
 	}
-	if RAMCounter > 0 {
-		usedRAMAvg = usedRAMAvg / RAMCounter
+	if ramCounter > 0 {
+		usedRAMAvg = usedRAMAvg / ramCounter
 	}
 	templateData.RAMUsedAvgMB = strconv.FormatInt(usedRAMAvg, 10) + "/" + strconv.FormatInt(totalRAM, 10) + " MB"
 	if diskCounter > 0 {
 		usedDiskAvg = usedDiskAvg / diskCounter
 	}
 	templateData.DiskUsedAvgGB = strconv.FormatInt(usedDiskAvg, 10) + "/" + strconv.FormatInt(totalDisk, 10) + " GB"
-	if CPUCounter > 0 {
-		CPUAvg = CPUAvg / CPUCounter
+	if cpuCounter > 0 {
+		cpuAvg = cpuAvg / cpuCounter
 	}
-	templateData.CPUAvg = strconv.FormatInt(CPUAvg, 10) + "%"
+	templateData.CPUAvg = strconv.FormatInt(cpuAvg, 10) + "%"
 	templateData.RebootsCurrentDay = strconv.FormatInt(rebootCounter, 10)
 	if templateData.Reachable == false {
 		unreachableFlag = true
 	}
 	templateData.Temperature = strconv.FormatInt(maxTemp, 10)
+}
+
+func GetOutboundIP() net.IP {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+	return localAddr.IP
 }

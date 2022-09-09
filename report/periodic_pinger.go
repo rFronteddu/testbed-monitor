@@ -2,6 +2,7 @@ package report
 
 import (
 	"fmt"
+	"log"
 	pb "testbed-monitor/pinger"
 	"testbed-monitor/probers"
 	"time"
@@ -9,6 +10,7 @@ import (
 
 type Monitor struct {
 	lastReachable time.Time
+	myIP          string
 }
 
 type NotificationTemplate struct {
@@ -16,35 +18,35 @@ type NotificationTemplate struct {
 	Timestamp string
 }
 
-var dailyFlag = false
-
 func NewMonitor() *Monitor {
 	monitor := new(Monitor)
 	monitor.lastReachable = time.Time{}
+	monitor.myIP = string(GetOutboundIP())
 	return monitor
 }
 
-func (monitor *Monitor) Start(IP string, period int) {
+func (monitor *Monitor) Start(ip string, period int) {
 	fmt.Printf("Starting periodic pinger...\n")
+	dailyFlag := false
 	replyCh := make(chan *pb.PingReply)
 	var p *pb.PingReply
 	var emailDataN NotificationTemplate
-	emailDataN.TestbedIP = IP
+	emailDataN.TestbedIP = ip
 	ticker := time.NewTicker(time.Duration(period) * time.Minute)
 	dailyCheck := time.NewTicker(60 * time.Minute)
 	go func() {
 		for range ticker.C {
-			fmt.Printf("\nPinging testbed @ %s...\n", IP)
-			icmp := probers.NewICMPProbe(IP, replyCh)
+			log.Printf("\nPinging testbed @ %s...\n", ip)
+			icmp := probers.NewICMPProbe(ip, replyCh)
 			icmp.Start()
 			p = <-replyCh
 			if p.Reachable == true {
 				monitor.lastReachable = time.Now()
-				fmt.Printf("Testbed %s was reached at %s\n", IP, monitor.lastReachable.String())
+				log.Printf("Testbed %s was reached at %s\n", ip, monitor.lastReachable.String())
 			} else {
-				fmt.Printf("Testbed %s could not be reached.\n", IP)
+				log.Printf("Testbed %s could not be reached.\n", ip)
 				emailDataN.Timestamp = time.Now().Format("Jan 02 2006 15:04:05")
-				if dailyFlag == false {
+				if !dailyFlag {
 					subjectN := emailDataN.TestbedIP + " could not be reached at " + emailDataN.Timestamp
 					MailNotification(subjectN, emailDataN)
 					dailyFlag = true
