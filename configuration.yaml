@@ -10,7 +10,8 @@ AGGREGATE_HOUR: "11"
 EXPECTED_REPORT_PERIOD: "1"
 # What temperature should trigger a warning notification
 CRITICAL_TEMP: "200"
-# The port to post/get data to the API
+# The IP address and port to post/get data to the API
+API_IP: ""
 API_PORT: "4100"
 # What is the MQTT broker to subscribe to
 MQTT_BROKER: #"tcp://test.mosquitto.org:1883"

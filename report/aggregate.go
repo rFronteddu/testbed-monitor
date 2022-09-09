@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"log"
-	"net"
 	"net/http"
 	"strconv"
 	"time"
@@ -15,7 +14,7 @@ type Aggregate struct {
 	aggregatePeriod int
 	aggregateHour   int
 	criticalTemp    int
-	myIP            string
+	apiIP           string
 	apiPort         string
 }
 
@@ -38,13 +37,13 @@ type reportTemplate struct {
 	Template   []TemplateData `json:"TemplateData"`
 }
 
-func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateHour int, criticalTemp int, apiPort string) *Aggregate {
+func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateHour int, criticalTemp int, apiIP string, apiPort string) *Aggregate {
 	aggregate := new(Aggregate)
 	aggregate.statusChan = statusChan
 	aggregate.aggregatePeriod = aggregatePeriod
 	aggregate.aggregateHour = aggregateHour
 	aggregate.criticalTemp = criticalTemp
-	aggregate.myIP = string(GetOutboundIP())
+	aggregate.apiIP = apiIP
 	aggregate.apiPort = apiPort
 	return aggregate
 }
@@ -95,7 +94,7 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 }
 
 func (aggregate *Aggregate) postStatusToApp(emailData reportTemplate) {
-	apiAddress := aggregate.myIP + ":" + aggregate.apiPort
+	apiAddress := aggregate.apiIP + ":" + aggregate.apiPort
 	jsonReport, errJ := json.Marshal(emailData)
 	if errJ != nil {
 		log.Println("Error creating json object: ", errJ)
@@ -107,7 +106,7 @@ func (aggregate *Aggregate) postStatusToApp(emailData reportTemplate) {
 }
 
 func (aggregate *Aggregate) towerAlertInApp(alertIP string) {
-	apiAddress := aggregate.myIP + ":" + aggregate.apiPort
+	apiAddress := aggregate.apiIP + ":" + aggregate.apiPort
 	_, err := http.Get("http://" + apiAddress + "/alert/" + alertIP)
 	if err != nil {
 		log.Println("Error posting to API", err)
@@ -234,14 +233,4 @@ func weeklyAggregator(reports map[time.Time]*StatusReport, iP string, templateDa
 		unreachableFlag = true
 	}
 	templateData.Temperature = strconv.FormatInt(maxTemp, 10)
-}
-
-func GetOutboundIP() net.IP {
-	conn, err := net.Dial("udp", "8.8.8.8:80")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-	return localAddr.IP
 }

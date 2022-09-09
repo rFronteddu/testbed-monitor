@@ -18,6 +18,7 @@ type Configuration struct {
 	AggregatePeriod      string `yaml:"AGGREGATE_PERIOD"`
 	AggregateHour        string `yaml:"AGGREGATE_HOUR"`
 	ExpectedReportPeriod string `yaml:"EXPECTED_REPORT_PERIOD"`
+	APIIP                string `yaml:"API_IP"`
 	APIPort              string `yaml:"API_PORT"`
 	CriticalTemp         string `yaml:"CRITICAL_TEMP"`
 	MonitorTestbed       bool   `yaml:"MONITOR_TESTBED"`
@@ -31,7 +32,7 @@ func loadConfiguration(path string) *Configuration {
 	yfile, err := ioutil.ReadFile(path)
 	if err != nil {
 		log.Printf("Could not open %s error: %s\n", path, err)
-		conf := &Configuration{true, "8758", "60", "23", "30", "4100", "200", false, "", "30", "", ""}
+		conf := &Configuration{true, "8758", "60", "23", "30", "", "4100", "200", false, "", "30", "", ""}
 		fmt.Printf("Host Monitor will use default configuration: %v\n", conf)
 		return conf
 	}
@@ -58,6 +59,7 @@ func main() {
 		measureCh := make(chan *measure.Measure)
 		statusCh := make(chan *report.StatusReport)
 		var towers []string
+		apiIP := conf.APIIP
 		apiPort := conf.APIPort
 		fmt.Printf("Data will be posted to the API on port %s\n", conf.APIPort)
 		expectedReportPeriod := 30
@@ -104,7 +106,7 @@ func main() {
 			//fmt.Printf("Program will notify user if temperature is above %v\n", conf.CriticalTemp)
 		}
 
-		aggregate := report.NewAggregate(statusCh, aggregatePeriod, aggregateHour, criticalTemp, apiPort)
+		aggregate := report.NewAggregate(statusCh, aggregatePeriod, aggregateHour, criticalTemp, apiIP, apiPort)
 		aggregate.Start(&towers)
 	}
 

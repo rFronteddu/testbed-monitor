@@ -27,6 +27,7 @@ func NewSubscriber(broker string, topic string, mqttCh chan *report.StatusReport
 			r.TowerIP = tower
 			r.Temperature = int64(temperature)
 			r.Timestamp = timestamppb.New(timestamp)
+			r.Reachable = true
 			mqttCh <- r
 		}
 	}

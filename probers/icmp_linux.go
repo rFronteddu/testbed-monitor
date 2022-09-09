@@ -4,6 +4,7 @@ package probers
 
 import (
 	"bytes"
+	"log"
 	"os/exec"
 	"strconv"
 	"strings"

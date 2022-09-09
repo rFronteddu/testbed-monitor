@@ -10,7 +10,6 @@ import (
 
 type Monitor struct {
 	lastReachable time.Time
-	myIP          string
 }
 
 type NotificationTemplate struct {
@@ -21,7 +20,6 @@ type NotificationTemplate struct {
 func NewMonitor() *Monitor {
 	monitor := new(Monitor)
 	monitor.lastReachable = time.Time{}
-	monitor.myIP = string(GetOutboundIP())
 	return monitor
 }
 

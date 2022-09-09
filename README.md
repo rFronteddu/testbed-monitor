@@ -32,7 +32,8 @@ AGGREGATE_HOUR: "23"
 EXPECTED_REPORT_PERIOD: "1"
 # What temperature should trigger a warning notification
 CRITICAL_TEMP: "200"
-# The port to post/get data to the API
+# The IP address and port to post/get data to the API
+API_IP: ""
 API_PORT: "4100"
 # MQTT subscription information
 MQTTBroker: ""
