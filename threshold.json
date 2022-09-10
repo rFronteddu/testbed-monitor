@@ -1,0 +1,8 @@
+[{
+  "id": "1",
+  "description": "test",
+  "operator": "<>=",
+  "field": "temperature",
+  "trigger": "1233",
+  "period": "12h"
+}]

@@ -19,22 +19,22 @@ type Aggregate struct {
 }
 
 type TemplateData struct {
-	TowerIP                       string `json:"TowerIP"`
-	LastArduinoReachableTimestamp string `json:"LastArduinoReachableTimestamp"`
-	LastTowerReachableTimestamp   string `json:"LastTowerReachableTimestamp"`
-	BootTimestamp                 string `json:"BootTimestamp"`
-	RebootsCurrentDay             string `json:"RebootsCurrentDay"`
-	RAMUsedAvgMB                  string `json:"RAMUsedAvgMB"`
-	DiskUsedAvgGB                 string `json:"DiskUsedAvgGB"`
-	CPUAvg                        string `json:"CPUAvg"`
-	Reachable                     bool   `json:"Reachable"`
-	Temperature                   string `json:"Temperature"`
+	TowerIP                       string `json:"tower"`
+	LastArduinoReachableTimestamp string `json:"arduinoReached"`
+	LastTowerReachableTimestamp   string `json:"towerReached"`
+	BootTimestamp                 string `json:"bootTime"`
+	RebootsCurrentDay             string `json:"reboots"`
+	RAMUsedAvgMB                  string `json:"usedRAM"`
+	DiskUsedAvgGB                 string `json:"usedDisk"`
+	CPUAvg                        string `json:"cpu"`
+	Reachable                     bool   `json:"reachable"`
+	Temperature                   string `json:"temperature"`
 }
 
 type reportTemplate struct {
-	ReportType string         `json:"ReportType"`
-	Timestamp  string         `json:"Timestamp"`
-	Template   []TemplateData `json:"TemplateData"`
+	ReportType string         `json:"type"`
+	Timestamp  string         `json:"timestamp"`
+	Template   []TemplateData `json:"report"`
 }
 
 func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateHour int, criticalTemp int, apiIP string, apiPort string) *Aggregate {
@@ -95,7 +95,8 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 
 func (aggregate *Aggregate) postStatusToApp(emailData reportTemplate) {
 	apiAddress := aggregate.apiIP + ":" + aggregate.apiPort
-	jsonReport, errJ := json.Marshal(emailData)
+	jsonReport, errJ := json.Marshal(emailData.Template)
+	log.Println(string(jsonReport))
 	if errJ != nil {
 		log.Println("Error creating json object: ", errJ)
 	}
