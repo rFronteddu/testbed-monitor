@@ -222,10 +222,10 @@ func file_report_proto_rawDescGZIP() []byte {
 var file_report_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_report_proto_goTypes = []interface{}{
 	(*StatusReport)(nil),          // 0: report.StatusReport
-	(*timestamppb.Timestamp)(nil), // 1: google.protobuf.Timestamp
+	(*timestamppb.Timestamp)(nil), // 1: google.protobuf.timestamp
 }
 var file_report_proto_depIdxs = []int32{
-	1, // 0: report.StatusReport.timestamp:type_name -> google.protobuf.Timestamp
+	1, // 0: report.StatusReport.timestamp:type_name -> google.protobuf.timestamp
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name

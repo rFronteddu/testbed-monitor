@@ -97,16 +97,8 @@ func main() {
 			}
 			log.Printf("Daily report will be emailed at hour %v\n", conf.AggregateHour)
 		}
-		criticalTemp := 200
-		if conf.CriticalTemp != "" {
-			criticalTemp, err = strconv.Atoi(conf.CriticalTemp)
-			if err != nil {
-				log.Printf("Error converting %s to integer, critical temperature set to default (200)", conf.CriticalTemp)
-			}
-			//fmt.Printf("Program will notify user if temperature is above %v\n", conf.CriticalTemp)
-		}
 
-		aggregate := report.NewAggregate(statusCh, aggregatePeriod, aggregateHour, criticalTemp, apiIP, apiPort)
+		aggregate := report.NewAggregate(statusCh, aggregatePeriod, aggregateHour, apiIP, apiPort)
 		threshold := thresholds.LoadConfiguration("threshold.json")
 		aggregate.SetTriggers(threshold)
 		aggregate.Start(&towers)
