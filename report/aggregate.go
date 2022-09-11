@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"testbed-monitor/thresholds"
 	"time"
 )
 
@@ -19,16 +20,16 @@ type Aggregate struct {
 }
 
 type TemplateData struct {
-	TowerIP                       string `json:"tower"`
-	LastArduinoReachableTimestamp string `json:"arduinoReached"`
-	LastTowerReachableTimestamp   string `json:"towerReached"`
-	BootTimestamp                 string `json:"bootTime"`
-	RebootsCurrentDay             string `json:"reboots"`
-	RAMUsedAvgMB                  string `json:"usedRAM"`
-	DiskUsedAvgGB                 string `json:"usedDisk"`
-	CPUAvg                        string `json:"cpu"`
-	Reachable                     bool   `json:"reachable"`
-	Temperature                   string `json:"temperature"`
+	tower          string `json:"tower"`
+	arduinoReached string `json:"arduinoReached"`
+	towerReached   string `json:"towerReached"`
+	bootTime       string `json:"bootTime"`
+	reboots        string `json:"reboots"`
+	usedRAM        string `json:"usedRAM"`
+	usedDisk       string `json:"usedDisk"`
+	cpu            string `json:"cpu"`
+	reachable      bool   `json:"reachable"`
+	temperature    string `json:"temperature"`
 }
 
 type reportTemplate struct {
@@ -93,6 +94,13 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 	}
 }
 
+func (aggregate *Aggregate) SetTriggers(threshold []thresholds.Config) {
+	log.Println("Thresholds set:")
+	for _, t := range threshold {
+		log.Printf("%s %s %s\n", t.Field, t.Operator, t.Trigger)
+	}
+}
+
 func (aggregate *Aggregate) postStatusToApp(emailData reportTemplate) {
 	apiAddress := aggregate.apiIP + ":" + aggregate.apiPort
 	jsonReport, errJ := json.Marshal(emailData.Template)
@@ -118,15 +126,15 @@ func dailyAggregator(reports map[time.Time]*StatusReport, iP string, templateDat
 	var usedRAMAvg, ramCounter, usedDiskAvg, diskCounter, cpuAvg, cpuCounter, rebootCounter int64 = 0, 0, 0, 0, 0, 0, 0
 	var totalRAM, totalDisk, maxTemp int64 = 0, 0, 0
 	compareTime := time.Time{}
-	templateData.TowerIP = iP
+	templateData.tower = iP
 	for key, element := range reports {
 		if key.Day() == time.Now().Day() && element.TowerIP == iP {
 			if element.Timestamp.AsTime().After(compareTime) {
-				templateData.Reachable = true
+				templateData.reachable = true
 				if element.Reachable == true {
-					templateData.LastArduinoReachableTimestamp = element.LastArduinoReachableTimestamp
-					templateData.LastTowerReachableTimestamp = element.LastTowerReachableTimestamp
-					templateData.BootTimestamp = element.BootTimestamp
+					templateData.arduinoReached = element.LastArduinoReachableTimestamp
+					templateData.towerReached = element.LastTowerReachableTimestamp
+					templateData.bootTime = element.BootTimestamp
 				}
 				if totalRAM == 0 {
 					totalRAM = element.RAMTotal
@@ -135,7 +143,7 @@ func dailyAggregator(reports map[time.Time]*StatusReport, iP string, templateDat
 					totalDisk = element.DiskTotal
 				}
 				if !element.Reachable {
-					templateData.Reachable = false
+					templateData.reachable = false
 				}
 				compareTime = element.Timestamp.AsTime()
 			}
@@ -158,17 +166,17 @@ func dailyAggregator(reports map[time.Time]*StatusReport, iP string, templateDat
 	if ramCounter > 0 {
 		usedRAMAvg = usedRAMAvg / ramCounter
 	}
-	templateData.RAMUsedAvgMB = strconv.FormatInt(usedRAMAvg, 10) + "/" + strconv.FormatInt(totalRAM, 10) + " MB"
+	templateData.usedRAM = strconv.FormatInt(usedRAMAvg, 10) + "/" + strconv.FormatInt(totalRAM, 10) + " MB"
 	if diskCounter > 0 {
 		usedDiskAvg = usedDiskAvg / diskCounter
 	}
-	templateData.DiskUsedAvgGB = strconv.FormatInt(usedDiskAvg, 10) + "/" + strconv.FormatInt(totalDisk, 10) + " GB"
+	templateData.usedDisk = strconv.FormatInt(usedDiskAvg, 10) + "/" + strconv.FormatInt(totalDisk, 10) + " GB"
 	if cpuCounter > 0 {
 		cpuAvg = cpuAvg / cpuCounter
 	}
-	templateData.CPUAvg = strconv.FormatInt(cpuAvg, 10) + "%"
-	templateData.RebootsCurrentDay = strconv.FormatInt(rebootCounter, 10)
-	if templateData.Reachable == false {
+	templateData.cpu = strconv.FormatInt(cpuAvg, 10) + "%"
+	templateData.reboots = strconv.FormatInt(rebootCounter, 10)
+	if templateData.reachable == false {
 		unreachableFlag = true
 	}
 
@@ -178,16 +186,16 @@ func weeklyAggregator(reports map[time.Time]*StatusReport, iP string, templateDa
 	var usedRAMAvg, ramCounter, usedDiskAvg, diskCounter, cpuAvg, cpuCounter, rebootCounter int64 = 0, 0, 0, 0, 0, 0, 0
 	var totalRAM, totalDisk, maxTemp int64 = 0, 0, 0
 	compareTime := time.Time{}
-	templateData.TowerIP = iP
+	templateData.tower = iP
 	for key, element := range reports {
-		templateData.TowerIP = iP
+		templateData.tower = iP
 		if key.After(time.Now().Add(-7*24*time.Hour)) && element.TowerIP == iP {
 			if element.Timestamp.AsTime().After(compareTime) {
-				templateData.Reachable = true
+				templateData.reachable = true
 				if element.Reachable == true {
-					templateData.LastArduinoReachableTimestamp = element.LastArduinoReachableTimestamp
-					templateData.LastTowerReachableTimestamp = element.LastTowerReachableTimestamp
-					templateData.BootTimestamp = element.BootTimestamp
+					templateData.arduinoReached = element.LastArduinoReachableTimestamp
+					templateData.towerReached = element.LastTowerReachableTimestamp
+					templateData.bootTime = element.BootTimestamp
 				}
 				if totalRAM == 0 {
 					totalRAM = element.RAMTotal
@@ -196,7 +204,7 @@ func weeklyAggregator(reports map[time.Time]*StatusReport, iP string, templateDa
 					totalDisk = element.DiskTotal
 				}
 				if !element.Reachable {
-					templateData.Reachable = false
+					templateData.reachable = false
 				}
 				compareTime = element.Timestamp.AsTime()
 			}
@@ -220,18 +228,18 @@ func weeklyAggregator(reports map[time.Time]*StatusReport, iP string, templateDa
 	if ramCounter > 0 {
 		usedRAMAvg = usedRAMAvg / ramCounter
 	}
-	templateData.RAMUsedAvgMB = strconv.FormatInt(usedRAMAvg, 10) + "/" + strconv.FormatInt(totalRAM, 10) + " MB"
+	templateData.usedRAM = strconv.FormatInt(usedRAMAvg, 10) + "/" + strconv.FormatInt(totalRAM, 10) + " MB"
 	if diskCounter > 0 {
 		usedDiskAvg = usedDiskAvg / diskCounter
 	}
-	templateData.DiskUsedAvgGB = strconv.FormatInt(usedDiskAvg, 10) + "/" + strconv.FormatInt(totalDisk, 10) + " GB"
+	templateData.usedDisk = strconv.FormatInt(usedDiskAvg, 10) + "/" + strconv.FormatInt(totalDisk, 10) + " GB"
 	if cpuCounter > 0 {
 		cpuAvg = cpuAvg / cpuCounter
 	}
-	templateData.CPUAvg = strconv.FormatInt(cpuAvg, 10) + "%"
-	templateData.RebootsCurrentDay = strconv.FormatInt(rebootCounter, 10)
-	if templateData.Reachable == false {
+	templateData.cpu = strconv.FormatInt(cpuAvg, 10) + "%"
+	templateData.reboots = strconv.FormatInt(rebootCounter, 10)
+	if templateData.reachable == false {
 		unreachableFlag = true
 	}
-	templateData.Temperature = strconv.FormatInt(maxTemp, 10)
+	templateData.temperature = strconv.FormatInt(maxTemp, 10)
 }

@@ -27,7 +27,7 @@ type StatusReport struct {
 	unknownFields protoimpl.UnknownFields
 
 	TowerIP                       string                 `protobuf:"bytes,1,opt,name=towerIP,proto3" json:"towerIP,omitempty"`                                             // measure.Strings["host_name"]
-	LastArduinoReachableTimestamp string                 `protobuf:"bytes,2,opt,name=lastArduinoReachableTimestamp,proto3" json:"lastArduinoReachableTimestamp,omitempty"` // time.Now().Add(measure.Strings["LastArduinoReachableTimestamp"]).String()
+	LastArduinoReachableTimestamp string                 `protobuf:"bytes,2,opt,name=lastArduinoReachableTimestamp,proto3" json:"lastArduinoReachableTimestamp,omitempty"` // time.Now().Add(measure.Strings["arduinoReached"]).String()
 	LastTowerReachableTimestamp   string                 `protobuf:"bytes,3,opt,name=lastTowerReachableTimestamp,proto3" json:"lastTowerReachableTimestamp,omitempty"`     // testbed-monitor/report/receiver.go/receivedReports[ip]
 	BootTimestamp                 string                 `protobuf:"bytes,4,opt,name=bootTimestamp,proto3" json:"bootTimestamp,omitempty"`                                 // measure.Strings["bootTime"]
 	RebootsCurrentDay             int64                  `protobuf:"varint,5,opt,name=rebootsCurrentDay,proto3" json:"rebootsCurrentDay,omitempty"`                        // measure.Integers["Reboots_Today"]
@@ -35,7 +35,7 @@ type StatusReport struct {
 	RAMTotal                      int64                  `protobuf:"varint,7,opt,name=RAMTotal,proto3" json:"RAMTotal,omitempty"`                                          // measure.Integers["vm_total"]
 	DiskUsed                      int64                  `protobuf:"varint,8,opt,name=diskUsed,proto3" json:"diskUsed,omitempty"`                                          // measure.Integers["DISK_USED"]
 	DiskTotal                     int64                  `protobuf:"varint,9,opt,name=diskTotal,proto3" json:"diskTotal,omitempty"`                                        // measure.Integers["DISK_TOTAL"]
-	CPUAvg                        int64                  `protobuf:"varint,10,opt,name=CPUAvg,proto3" json:"CPUAvg,omitempty"`                                             // measure.Integers["CPU_AVG"]
+	CPUAvg                        int64                  `protobuf:"varint,10,opt,name=cpu,proto3" json:"cpu,omitempty"`                                             // measure.Integers["CPU_AVG"]
 	Timestamp                     *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=timestamp,proto3" json:"timestamp,omitempty"`                                        // the time when this measure was collected
 	Reachable                     bool                   `protobuf:"varint,12,opt,name=reachable,proto3" json:"reachable,omitempty"`                                       // has this tower been reached within the expected time?
 	Temperature                   int64                  `protobuf:"varint,13,opt,name=temperature,proto3" json:"temperature,omitempty"`                                   // temperature from arduino controller mqtt report

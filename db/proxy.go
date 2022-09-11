@@ -1,7 +1,6 @@
 package db
 
 import (
-	"fmt"
 	"testbed-monitor/graph"
 	"testbed-monitor/graph/model"
 	"testbed-monitor/measure"
@@ -49,7 +48,7 @@ func (proxy *Proxy) processReport(m *measure.Measure) {
 		proxy.resolver.CommitHost(status)
 	} else {
 		x := raw.(*model.HostStatus)
-		fmt.Printf("Got raw: %v\n", x)
+		log.Printf("Got raw: %v\n", x)
 		proxy.resolver.CommitHost(getStatusFromMeasure(address, x, m))
 	}
 }

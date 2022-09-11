@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
@@ -10,6 +9,7 @@ import (
 	"testbed-monitor/measure"
 	"testbed-monitor/mqtt"
 	"testbed-monitor/report"
+	"testbed-monitor/thresholds"
 )
 
 type Configuration struct {
@@ -33,7 +33,7 @@ func loadConfiguration(path string) *Configuration {
 	if err != nil {
 		log.Printf("Could not open %s error: %s\n", path, err)
 		conf := &Configuration{true, "8758", "60", "23", "30", "", "4100", "200", false, "", "30", "", ""}
-		fmt.Printf("Host Monitor will use default configuration: %v\n", conf)
+		log.Printf("Host Monitor will use default configuration: %v\n", conf)
 		return conf
 	}
 	if yfile == nil {
@@ -44,7 +44,7 @@ func loadConfiguration(path string) *Configuration {
 	if err2 != nil {
 		log.Fatalf("Configuration file could not be parsed, error: %s\n", err2)
 	}
-	fmt.Printf("Found configuration: %v\n", conf)
+	log.Printf("Found configuration: %v\n", conf)
 	return &conf
 }
 
@@ -61,20 +61,20 @@ func main() {
 		var towers []string
 		apiIP := conf.APIIP
 		apiPort := conf.APIPort
-		fmt.Printf("Data will be posted to the API on port %s\n", conf.APIPort)
+		log.Printf("Data will be posted to the API on port %s\n", conf.APIPort)
 		expectedReportPeriod := 30
 		if conf.ExpectedReportPeriod != "" {
 			expectedReportPeriod, err = strconv.Atoi(conf.ExpectedReportPeriod)
 			if err != nil {
-				fmt.Printf("Error converting %s to integer, expected report period set to default (60)", conf.ExpectedReportPeriod)
+				log.Printf("Error converting %s to integer, expected report period set to default (60)", conf.ExpectedReportPeriod)
 			}
-			fmt.Printf("Host will be pinged if no report in %v minutes\n", conf.ExpectedReportPeriod)
+			log.Printf("Host will be pinged if no report in %v minutes\n", conf.ExpectedReportPeriod)
 		}
 		receiver, err := report.NewReportReceiver(measureCh, statusCh, conf.ReceivePort, expectedReportPeriod)
 		if err != nil {
 			log.Fatalf("Fatal error %s while creating the report.Receiver, aborting...\n", err)
 		}
-		fmt.Printf("Starting report receiver on port %s...\n", conf.ReceivePort)
+		log.Printf("Starting report receiver on port %s...\n", conf.ReceivePort)
 		receiver.Start(&towers)
 
 		if conf.MQTTBroker != "" {
@@ -85,28 +85,30 @@ func main() {
 		if conf.AggregatePeriod != "" {
 			aggregatePeriod, err = strconv.Atoi(conf.AggregatePeriod)
 			if err != nil {
-				fmt.Printf("Error converting %s to integer, aggregate period set to default (60)", conf.AggregatePeriod)
+				log.Printf("Error converting %s to integer, aggregate period set to default (60)", conf.AggregatePeriod)
 			}
-			fmt.Printf("Aggregate will check to send email every %v minutes\n", conf.AggregatePeriod)
+			log.Printf("Aggregate will check to send email every %v minutes\n", conf.AggregatePeriod)
 		}
 		aggregateHour := 23
 		if conf.AggregateHour != "" {
 			aggregateHour, err = strconv.Atoi(conf.AggregateHour)
 			if err != nil {
-				fmt.Printf("Error converting %s to integer, aggregate hour set to default (23)", conf.AggregateHour)
+				log.Printf("Error converting %s to integer, aggregate hour set to default (23)", conf.AggregateHour)
 			}
-			fmt.Printf("Daily report will be emailed at hour %v\n", conf.AggregateHour)
+			log.Printf("Daily report will be emailed at hour %v\n", conf.AggregateHour)
 		}
 		criticalTemp := 200
 		if conf.CriticalTemp != "" {
 			criticalTemp, err = strconv.Atoi(conf.CriticalTemp)
 			if err != nil {
-				fmt.Printf("Error converting %s to integer, critical temperature set to default (200)", conf.CriticalTemp)
+				log.Printf("Error converting %s to integer, critical temperature set to default (200)", conf.CriticalTemp)
 			}
 			//fmt.Printf("Program will notify user if temperature is above %v\n", conf.CriticalTemp)
 		}
 
 		aggregate := report.NewAggregate(statusCh, aggregatePeriod, aggregateHour, criticalTemp, apiIP, apiPort)
+		threshold := thresholds.LoadConfiguration("threshold.json")
+		aggregate.SetTriggers(threshold)
 		aggregate.Start(&towers)
 	}
 
@@ -116,9 +118,9 @@ func main() {
 		if conf.PingPeriod != "" {
 			pingPeriod, err = strconv.Atoi(conf.PingPeriod)
 			if err != nil {
-				fmt.Printf("Error converting %s to integer, ping period set to default (30)", conf.PingPeriod)
+				log.Printf("Error converting %s to integer, ping period set to default (30)", conf.PingPeriod)
 			}
-			fmt.Printf("Program will ping testbed %s every %v minutes\n", conf.TestbedIP, conf.PingPeriod)
+			log.Printf("Program will ping testbed %s every %v minutes\n", conf.TestbedIP, conf.PingPeriod)
 		}
 		monitor := report.NewMonitor()
 		monitor.Start(testbedIP, pingPeriod)

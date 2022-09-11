@@ -1,7 +1,6 @@
 package report
 
 import (
-	"fmt"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/protobuf/proto"
 	"log"
@@ -99,7 +98,7 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers *
 		}
 
 		if strings.TrimSpace(string(buffer[0:n])) == "STOP" {
-			fmt.Println("Exiting UDP server!")
+			log.Println("Exiting UDP server!")
 			return
 		}
 
@@ -140,7 +139,7 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers *
 // GetStatusFromMeasure reads a Measure Report and prepares a Status Report for the app to use later
 func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport) {
 	s.TowerIP = ip
-	s.LastArduinoReachableTimestamp = time.Now().Add(time.Duration(m.Integers["LastArduinoReachableTimestamp"])).Format(time.RFC822)
+	s.LastArduinoReachableTimestamp = time.Now().Add(time.Duration(m.Integers["arduinoReached"])).Format(time.RFC822)
 	s.LastTowerReachableTimestamp = time.Now().Format(time.RFC822)
 	s.BootTimestamp = m.Strings["bootTime"]
 	s.RebootsCurrentDay = m.Integers["reboots"]

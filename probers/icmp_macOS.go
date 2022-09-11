@@ -4,7 +4,6 @@ package probers
 
 import (
 	"bytes"
-	"fmt"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -52,7 +51,7 @@ func ping(target string, replyCh chan *pb.PingReply) {
 		}
 	}
 
-	fmt.Printf("Loss: %v Avg rtt: %v\n", packetsReceived, rtt)
+	log.Printf("Loss: %v Avg rtt: %v\n", packetsReceived, rtt)
 
 	replyCh <- &pb.PingReply{
 		Reachable:      reachable,

@@ -1,7 +1,6 @@
 package report
 
 import (
-	"fmt"
 	"log"
 	pb "testbed-monitor/pinger"
 	"testbed-monitor/probers"
@@ -24,7 +23,7 @@ func NewMonitor() *Monitor {
 }
 
 func (monitor *Monitor) Start(ip string, period int) {
-	fmt.Printf("Starting periodic pinger...\n")
+	log.Printf("Starting periodic pinger...\n")
 	dailyFlag := false
 	replyCh := make(chan *pb.PingReply)
 	var p *pb.PingReply

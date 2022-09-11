@@ -4,7 +4,6 @@ package graph
 //
 // It serves as dependency injection for your app, add any dependencies you require here.
 import (
-	"fmt"
 	"github.com/hashicorp/go-memdb"
 	"testbed-monitor/graph/generated"
 	"testbed-monitor/graph/model"
@@ -48,7 +47,7 @@ func (r *Resolver) GetHost(id string) interface{} {
 func (r *Resolver) CommitHost(hostStatus *model.HostStatus) {
 	txn := r.DB.Txn(true)
 	if err := txn.Insert(HostStatusTable, hostStatus); err != nil {
-		fmt.Printf("Fatal error: %s while inserting struct: %v in database\n", err, hostStatus)
+		log.Printf("Fatal error: %s while inserting struct: %v in database\n", err, hostStatus)
 		return
 	}
 	// Commit the transaction
@@ -102,10 +101,10 @@ func NewResolver() (generated.Config, *Resolver) {
 						Unique:  false,
 						Indexer: &memdb.StringFieldIndex{Field: "BootTime"},
 					},
-					"Reachable": {
-						Name:    "Reachable",
+					"reachable": {
+						Name:    "reachable",
 						Unique:  false,
-						Indexer: &memdb.BoolFieldIndex{Field: "Reachable"},
+						Indexer: &memdb.BoolFieldIndex{Field: "reachable"},
 					},
 					"VirtualMemoryUsagePercent": {
 						Name:    "VirtualMemoryUsagePercent",
@@ -122,10 +121,10 @@ func NewResolver() (generated.Config, *Resolver) {
 						Unique:  false,
 						Indexer: &memdb.IntFieldIndex{Field: "DiskFree"},
 					},
-					"CPUAvg": {
-						Name:    "CPUAvg",
+					"cpu": {
+						Name:    "cpu",
 						Unique:  false,
-						Indexer: &memdb.IntFieldIndex{Field: "CPUAvg"},
+						Indexer: &memdb.IntFieldIndex{Field: "cpu"},
 					},
 					"Load1": {
 						Name:    "Load1",
