@@ -96,7 +96,7 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 		case msg := <-aggregate.statusChan:
 			reportAggregate[time.Now()] = msg
 			if !msg.Reachable {
-				aggregate.towerAlertInApp(msg.TowerIP)
+				aggregate.towerAlertInApp(msg.Tower)
 			}
 			for thresholdField := range aggregate.thresholds {
 				for _, reportField := range fields {
@@ -169,33 +169,33 @@ func aggregator(reports map[time.Time]*StatusReport, iP string, templateData *re
 		} else {
 			interval = -24 * time.Hour
 		}
-		if key.After(time.Now().Add(interval)) && element.TowerIP == iP {
+		if key.After(time.Now().Add(interval)) && element.Tower == iP {
 			if element.Timestamp.AsTime().After(compareTime) {
 				templateData.reachable = true
 				if element.Reachable == true {
-					templateData.arduinoReached = element.LastArduinoReachableTimestamp
-					templateData.towerReached = element.LastTowerReachableTimestamp
-					templateData.bootTime = element.BootTimestamp
+					templateData.arduinoReached = element.ArduinoReached
+					templateData.towerReached = element.TowerReached
+					templateData.bootTime = element.BootTime
 				}
 				if totalRAM == 0 {
-					totalRAM = element.RAMTotal
+					totalRAM = element.TotalRAM
 				}
 				if totalDisk == 0 {
-					totalDisk = element.DiskTotal
+					totalDisk = element.TotalDisk
 				}
 				if !element.Reachable {
 					templateData.reachable = false
 				}
 				compareTime = element.Timestamp.AsTime()
 			}
-			rebootCounter = rebootCounter + element.RebootsCurrentDay
-			usedRAMAvg = usedRAMAvg + element.RAMUsed
+			rebootCounter = rebootCounter + element.Reboots
+			usedRAMAvg = usedRAMAvg + element.UsedRAM
 			ramCounter++
-			usedDiskAvg = usedDiskAvg + element.DiskUsed
+			usedDiskAvg = usedDiskAvg + element.UsedDisk
 			diskCounter++
-			cpuAvg = cpuAvg + element.CPUAvg
+			cpuAvg = cpuAvg + element.Cpu
 			cpuCounter++
-			if element.Timestamp.AsTime().After(time.Now().Add(interval)) && element.TowerIP == iP {
+			if element.Timestamp.AsTime().After(time.Now().Add(interval)) && element.Tower == iP {
 				if element.Temperature > 0 {
 					if element.Temperature > maxTemp {
 						maxTemp = element.Temperature

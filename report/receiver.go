@@ -64,7 +64,7 @@ func (receiver *Receiver) Start(towers *[]string) {
 					} else {
 						log.Printf("\nTower %s is unreachable!\n", key)
 						s := &StatusReport{}
-						s.TowerIP = key
+						s.Tower = key
 						s.Timestamp = &timestamp.Timestamp{Seconds: time.Now().Unix()}
 						s.Reachable = false
 						receiver.statusCh <- s
@@ -138,16 +138,16 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers *
 
 // GetStatusFromMeasure reads a Measure Report and prepares a Status Report for the app to use later
 func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport) {
-	s.TowerIP = ip
-	s.LastArduinoReachableTimestamp = time.Now().Add(time.Duration(m.Integers["arduinoReached"])).Format(time.RFC822)
-	s.LastTowerReachableTimestamp = time.Now().Format(time.RFC822)
-	s.BootTimestamp = m.Strings["bootTime"]
-	s.RebootsCurrentDay = m.Integers["reboots"]
-	s.RAMUsed = m.Integers["vm_used"]
-	s.RAMTotal = m.Integers["vm_total"]
-	s.DiskUsed = m.Integers["DISK_USED"]
-	s.DiskTotal = m.Integers["DISK_TOTAL"]
-	s.CPUAvg = m.Integers["CPU_AVG"]
+	s.Tower = ip
+	s.ArduinoReached = time.Now().Add(time.Duration(m.Integers["arduinoReached"])).Format(time.RFC822)
+	s.TowerReached = time.Now().Format(time.RFC822)
+	s.BootTime = m.Strings["bootTime"]
+	s.Reboots = m.Integers["reboots"]
+	s.UsedRAM = m.Integers["vm_used"]
+	s.TotalRAM = m.Integers["vm_total"]
+	s.UsedDisk = m.Integers["DISK_USED"]
+	s.TotalDisk = m.Integers["DISK_TOTAL"]
+	s.Cpu = m.Integers["CPU_AVG"]
 	s.Timestamp = m.Timestamp
 	s.Reachable = true
 	s.Temperature = m.Integers["MQTT_Temp"]
