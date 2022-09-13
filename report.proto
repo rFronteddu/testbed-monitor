@@ -7,16 +7,16 @@ import "google/protobuf/timestamp.proto";
 option go_package = "/report";
 
 message StatusReport {
-    string towerIP = 1; // measure.Strings["host_name"]
-    string lastArduinoReachableTimestamp = 2; // time.Now().Add(measure.Strings["LastArduinoReachableTimestamp"]).String()
-    string lastTowerReachableTimestamp = 3; // testbed-monitor/report/receiver.go/receivedReports[ip]
-    string bootTimestamp = 4; // measure.Strings["bootTime"]
-    int64 rebootsCurrentDay = 5; // measure.Integers["Reboots_Today"]
-    int64 RAMUsed = 6; // measure.Integers["vm_used"]
-    int64 RAMTotal = 7; // measure.Integers["vm_total"]
-    int64 diskUsed = 8; // measure.Integers["DISK_USED"]
-    int64 diskTotal = 9; // measure.Integers["DISK_TOTAL"]
-    int64 CPUAvg = 10; // measure.Integers["CPU_AVG"]
+    string tower = 1; // measure.Strings["host_name"]
+    string arduinoReached = 2; // time.Now().Add(measure.Strings["LastArduinoReachableTimestamp"]).String()
+    string towerReached = 3; // testbed-monitor/report/receiver.go/receivedReports[ip]
+    string bootTime = 4; // measure.Strings["bootTime"]
+    int64 reboots = 5; // measure.Integers["Reboots_Today"]
+    int64 usedRAM = 6; // measure.Integers["vm_used"]
+    int64 totalRAM = 7; // measure.Integers["vm_total"]
+    int64 usedDisk = 8; // measure.Integers["DISK_USED"]
+    int64 totalDisk = 9; // measure.Integers["DISK_TOTAL"]
+    int64 cpu = 10; // measure.Integers["CPU_AVG"]
     google.protobuf.Timestamp timestamp = 11; // the time when this measure was collected
     bool reachable = 12; // has this tower been reached within the expected time?
     int64 temperature = 13; // temperature from arduino controller mqtt report

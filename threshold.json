@@ -1,7 +1,7 @@
 [{
   "id": "1",
   "description": "test",
-  "operator": "<>=",
+  "operator": ">",
   "field": "temperature",
   "trigger": "1233",
   "period": "12h"
