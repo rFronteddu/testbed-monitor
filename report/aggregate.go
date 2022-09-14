@@ -12,12 +12,13 @@ import (
 )
 
 type Aggregate struct {
-	statusChan      chan *StatusReport
-	aggregatePeriod int
-	aggregateHour   int
-	apiIP           string
-	apiPort         string
-	thresholds      map[string]trigger
+	statusChan         chan *StatusReport
+	aggregatePeriod    int
+	aggregateHour      int
+	apiIP              string
+	apiPort            string
+	thresholds         map[string]trigger
+	notificationFields map[string]string
 }
 
 type reportData struct {
@@ -53,6 +54,7 @@ func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateH
 	aggregate.apiIP = apiIP
 	aggregate.apiPort = apiPort
 	aggregate.thresholds = make(map[string]trigger)
+	aggregate.notificationFields = make(map[string]string)
 	return aggregate
 }
 
@@ -60,6 +62,7 @@ var aggregatedReport reportData
 var emailData reportTemplate
 var subject string
 var unreachableFlag bool
+var notificationFlag bool
 
 func (aggregate *Aggregate) Start(iPs *[]string) {
 	dailyTicker := time.NewTicker(time.Duration(aggregate.aggregatePeriod) * time.Minute)
@@ -98,21 +101,34 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 			if !msg.Reachable {
 				aggregate.towerAlertInApp(msg.Tower)
 			}
+			notificationFlag = false
 			for thresholdField := range aggregate.thresholds {
 				for _, reportField := range fields {
 					if aggregate.thresholds[thresholdField].field == reportField.Name {
-						if aggregate.thresholds[thresholdField].operator == ">" {
-							fieldValue := getReportValue(msg, reportField.Name)
+						fieldValue := getReportValue(msg, reportField.Name)
+						fieldName := aggregate.notificationFields[reportField.Name]
+						switch aggregate.thresholds[thresholdField].operator {
+						case ">":
 							if checkGreater(fieldValue, aggregate.thresholds[thresholdField].trigger) {
-								var emailDataT NotificationTemplate
-								setNotification(msg.Tower, reportField.Name, string(fieldValue))
-								subject = msg.Tower + " " + reportField.Name + " Notification"
-								MailNotification(subject, emailDataT)
+								notificationFlag = true
+							}
+						case "<":
+							if checkLess(fieldValue, aggregate.thresholds[thresholdField].trigger) {
+								notificationFlag = true
+							}
+						case "=":
+							if checkEqual(fieldValue, aggregate.thresholds[thresholdField].trigger) {
+								notificationFlag = true
 							}
 						}
+						if notificationFlag == true {
+							var notificationData NotificationTemplate
+							notificationData = setNotification(msg.Tower, fieldName, strconv.FormatInt(fieldValue, 10))
+							subject = msg.Tower + " " + fieldName + " Notification"
+							MailNotification(subject, notificationData)
+						}
 					}
-					// less than //
-					// equal to //
+
 				}
 			}
 		}
@@ -134,6 +150,11 @@ func (aggregate *Aggregate) SetTriggers(threshold []thresholds.Config) {
 			}
 		}
 	}
+	aggregate.notificationFields["reboots"] = "Reboots"
+	aggregate.notificationFields["usedRAM"] = "MB RAM used"
+	aggregate.notificationFields["usedDisk"] = "GB Disk used"
+	aggregate.notificationFields["cpu"] = "CPU %"
+	aggregate.notificationFields["temperature"] = "Temperature"
 }
 
 func (aggregate *Aggregate) postStatusToApp(emailData reportTemplate) {
@@ -233,10 +254,28 @@ func checkGreater(reportVal int64, triggerVal int64) bool {
 	}
 }
 
-// func checkLess //
-// func checkEqual //
+func checkLess(reportVal int64, triggerVal int64) bool {
+	if reportVal < triggerVal {
+		return true
+	} else {
+		return false
+	}
+}
+
+func checkEqual(reportVal int64, triggerVal int64) bool {
+	if reportVal == triggerVal {
+		return true
+	} else {
+		return false
+	}
+}
 
 func getReportValue(msg *StatusReport, field string) int64 {
+	defer func() {
+		if r := recover(); r != nil {
+			// Function will panic if the field is not in the status report so recover
+		}
+	}()
 	m, _ := json.Marshal(msg)
 	var x map[string]interface{}
 	_ = json.Unmarshal(m, &x)

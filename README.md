@@ -1,6 +1,6 @@
 # testbed-monitor
 ## Description
-This is the Testbed Monitor app, created by rFronteddu and maintained by cb218. It is a simple component designed to receive and log status reports from a host. The program generates daily and weekly aggregate reports and emails them to the address specified.
+This is the Testbed Monitor app, created by rFronteddu and maintained by cb218. It is a simple component designed to receive and log status reports from a host. The program generates daily and weekly aggregate reports and emails them to the address specified and posts them to the api specified. Notifications related to thresholds can also be configured.
 
 The app is designed to run in conjunction with the **Host Monitor** (https://github.com/rFronteddu/host-monitor) app, another utility created by rFronteddu.
 
@@ -46,6 +46,20 @@ TESTBED_IP: "127.0.0.1"
 # How often the testbed should be pinged
 PING_PERIOD: "30"
 ```
+The **threshold.json** file should declare the following variables, if desired:
+```
+[{
+  "id": "",
+  "description": "",
+  "operator": "",
+    - Currently supported operators are <, >, and =
+  "field": "",
+    - Currently supported fields are reboots, usedRAM, usedDisk, cpu, and temperature
+  "trigger": "",
+  "period": ""
+}]
+```
+
 
 ## Installation
 ### Prerequisites
