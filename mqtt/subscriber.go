@@ -24,7 +24,7 @@ func NewSubscriber(broker string, topic string, mqttCh chan *report.StatusReport
 		if ContainsTemperature(msg.Payload()) {
 			tower, temperature, timestamp := Parse(msg.Payload())
 			r := &report.StatusReport{}
-			r.TowerIP = tower
+			r.Tower = tower
 			r.Temperature = int64(temperature)
 			r.Timestamp = timestamppb.New(timestamp)
 			r.Reachable = true

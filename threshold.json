@@ -2,7 +2,7 @@
   "id": "1",
   "description": "test",
   "operator": ">",
-  "field": "temperature",
-  "trigger": "1233",
+  "field": "cpu",
+  "trigger": "1",
   "period": "12h"
 }]

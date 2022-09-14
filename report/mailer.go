@@ -18,6 +18,13 @@ type Request struct {
 	body    string
 }
 
+type NotificationTemplate struct {
+	TowerIP   string
+	Field     string
+	Value     string
+	Timestamp string
+}
+
 func NewRequest(to []string, subject, body string) *Request {
 	return &Request{
 		to:      to,

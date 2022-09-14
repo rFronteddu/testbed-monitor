@@ -102,16 +102,17 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 				for _, reportField := range fields {
 					if aggregate.thresholds[thresholdField].field == reportField.Name {
 						if aggregate.thresholds[thresholdField].operator == ">" {
-							log.Println(aggregate.thresholds[thresholdField].field)
-							log.Println(reportField.Name)
-							log.Println(getReportValue(msg, reportField.Name))
-							if getReportValue(msg, reportField.Name) > aggregate.thresholds[thresholdField].trigger {
-								log.Println("greater than!!!!!!")
+							fieldValue := getReportValue(msg, reportField.Name)
+							if checkGreater(fieldValue, aggregate.thresholds[thresholdField].trigger) {
+								var emailDataT NotificationTemplate
+								setNotification(msg.Tower, reportField.Name, string(fieldValue))
+								subject = msg.Tower + " " + reportField.Name + " Notification"
+								MailNotification(subject, emailDataT)
 							}
 						}
-						// less than
-						// equal to
 					}
+					// less than //
+					// equal to //
 				}
 			}
 		}
@@ -232,17 +233,20 @@ func checkGreater(reportVal int64, triggerVal int64) bool {
 	}
 }
 
-func getReportValue(msg *StatusReport, field string) int64 {
-	//defer func() {
-	//	if r := recover(); r != nil {
-	//		log.Println("Recovered in f", r)
-	//	}
-	//}()
-	//r := reflect.ValueOf(msg)
-	//log.Println(r)
-	//f := reflect.Indirect(r).FieldByName(field)
-	//log.Println(f)
-	return 0 //f.Int()
+// func checkLess //
+// func checkEqual //
 
-	//panic: reflect: call of reflect.Value.Int on zero Value
+func getReportValue(msg *StatusReport, field string) int64 {
+	m, _ := json.Marshal(msg)
+	var x map[string]interface{}
+	_ = json.Unmarshal(m, &x)
+	return int64(x[field].(float64))
+}
+
+func setNotification(tower string, field string, value string) (emailData NotificationTemplate) {
+	emailData.TowerIP = tower
+	emailData.Field = field
+	emailData.Value = value
+	emailData.Timestamp = time.Now().Format("Jan 02 2006 15:04:05")
+	return emailData
 }
