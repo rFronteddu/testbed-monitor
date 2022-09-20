@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
-	"testbed-monitor/thresholds"
+	"testbed-monitor/traps"
 	"time"
 )
 
@@ -17,7 +17,7 @@ type Aggregate struct {
 	aggregateHour      int
 	apiIP              string
 	apiPort            string
-	thresholds         map[string]trigger
+	traps              map[string]trigger
 	notificationFields map[string]string
 }
 
@@ -53,7 +53,7 @@ func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateH
 	aggregate.aggregateHour = aggregateHour
 	aggregate.apiIP = apiIP
 	aggregate.apiPort = apiPort
-	aggregate.thresholds = make(map[string]trigger)
+	aggregate.traps = make(map[string]trigger)
 	aggregate.notificationFields = make(map[string]string)
 	return aggregate
 }
@@ -102,22 +102,22 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 				aggregate.towerAlertInApp(msg.Tower)
 			}
 			notificationFlag = false
-			for thresholdField := range aggregate.thresholds {
+			for trapField := range aggregate.traps {
 				for _, reportField := range fields {
-					if aggregate.thresholds[thresholdField].field == reportField.Name {
+					if aggregate.traps[trapField].field == reportField.Name {
 						fieldValue := getReportValue(msg, reportField.Name)
 						fieldName := aggregate.notificationFields[reportField.Name]
-						switch aggregate.thresholds[thresholdField].operator {
+						switch aggregate.traps[trapField].operator {
 						case ">":
-							if checkGreater(fieldValue, aggregate.thresholds[thresholdField].trigger) {
+							if checkGreater(fieldValue, aggregate.traps[trapField].trigger) {
 								notificationFlag = true
 							}
 						case "<":
-							if checkLess(fieldValue, aggregate.thresholds[thresholdField].trigger) {
+							if checkLess(fieldValue, aggregate.traps[trapField].trigger) {
 								notificationFlag = true
 							}
 						case "=":
-							if checkEqual(fieldValue, aggregate.thresholds[thresholdField].trigger) {
+							if checkEqual(fieldValue, aggregate.traps[trapField].trigger) {
 								notificationFlag = true
 							}
 						}
@@ -135,17 +135,17 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 	}
 }
 
-func (aggregate *Aggregate) SetTriggers(threshold []thresholds.Config) {
+func (aggregate *Aggregate) SetTriggers(traps []traps.Config) {
 	fields := reflect.VisibleFields(reflect.TypeOf(struct{ reportData }{}))
 	log.Println("Thresholds:")
 	for _, field := range fields {
-		for _, t := range threshold {
+		for _, t := range traps {
 			if field.Name == t.Field {
 				setTrigger := trigger{}
 				setTrigger.field = t.Field
 				setTrigger.operator = t.Operator
 				setTrigger.trigger, _ = strconv.ParseInt(t.Trigger, 10, 64)
-				aggregate.thresholds[field.Name] = setTrigger
+				aggregate.traps[field.Name] = setTrigger
 				log.Printf("%s %s %s\n", t.Field, t.Operator, t.Trigger)
 			}
 		}

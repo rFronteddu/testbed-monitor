@@ -9,7 +9,7 @@ import (
 	"testbed-monitor/measure"
 	"testbed-monitor/mqtt"
 	"testbed-monitor/report"
-	"testbed-monitor/thresholds"
+	"testbed-monitor/traps"
 )
 
 type Configuration struct {
@@ -99,8 +99,8 @@ func main() {
 		}
 
 		aggregate := report.NewAggregate(statusCh, aggregatePeriod, aggregateHour, apiIP, apiPort)
-		threshold := thresholds.LoadConfiguration("threshold.json")
-		aggregate.SetTriggers(threshold)
+		traps := traps.LoadConfiguration("traps.json")
+		aggregate.SetTriggers(traps)
 		aggregate.Start(&towers)
 	}
 

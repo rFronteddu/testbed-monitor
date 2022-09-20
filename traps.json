@@ -4,7 +4,7 @@
   "operator": ">",
   "field": "cpu",
   "trigger": "1",
-  "period": "12h"
+  "period": "12"
 },
   {
     "id": "2",
@@ -12,7 +12,7 @@
     "operator": "=",
     "field": "reboots",
     "trigger": "0",
-    "period": "12h"
+    "period": "12"
   },
   {
     "id": "2",
@@ -20,5 +20,5 @@
     "operator": "<",
     "field": "usedDisk",
     "trigger": "2000",
-    "period": "12h"
+    "period": "12"
   }]

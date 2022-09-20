@@ -1,4 +1,4 @@
-package thresholds
+package traps
 
 import (
 	"encoding/json"
