@@ -1,6 +1,6 @@
 # testbed-monitor
 ## Description
-This is the Testbed Monitor app, created by rFronteddu and maintained by cb218. It is a simple component designed to receive and log status reports from a host. The program generates daily and weekly aggregate reports and emails them to the address specified and posts them to the api specified. Notifications related to thresholds can also be configured.
+This is the Testbed Monitor app, created by rFronteddu and  cb218. It is a simple component designed to receive and process status reports from a host. The program generates daily and weekly aggregate reports and emails them to the address specified and posts them to the API specified. Notifications related to field value limits can also be configured.
 
 The app is designed to run in conjunction with the **Host Monitor** (https://github.com/rFronteddu/host-monitor) app, another utility created by rFronteddu.
 
@@ -30,8 +30,6 @@ AGGREGATE_PERIOD: "2"
 AGGREGATE_HOUR: "23"
 # How long should the receiver wait for a host report before trying to ping
 EXPECTED_REPORT_PERIOD: "1"
-# What temperature should trigger a warning notification
-CRITICAL_TEMP: "200"
 # The IP address and port to post/get data to the API
 API_IP: ""
 API_PORT: "4100"
@@ -46,7 +44,7 @@ TESTBED_IP: "127.0.0.1"
 # How often the testbed should be pinged
 PING_PERIOD: "30"
 ```
-The **threshold.json** file should declare the following variables, if desired:
+The **traps.json** file should declare the following variables, if notifications at field value limits are desired:
 ```
 [{
   "id": "",
@@ -57,6 +55,7 @@ The **threshold.json** file should declare the following variables, if desired:
     - Currently supported fields are reboots, usedRAM, usedDisk, cpu, and temperature
   "trigger": "",
   "period": ""
+    - Unit: hours
 }]
 ```
 

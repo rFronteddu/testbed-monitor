@@ -41,9 +41,12 @@ type reportTemplate struct {
 }
 
 type trigger struct {
-	field    string
-	operator string
-	trigger  int64
+	field            string
+	operator         string
+	trigger          int64
+	period           int
+	lastNotification time.Time
+	flag             bool
 }
 
 func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateHour int, apiIP string, apiPort string) *Aggregate {
@@ -66,6 +69,7 @@ var notificationFlag bool
 
 func (aggregate *Aggregate) Start(iPs *[]string) {
 	dailyTicker := time.NewTicker(time.Duration(aggregate.aggregatePeriod) * time.Minute)
+	periodTicker := time.NewTicker(time.Duration(aggregate.aggregatePeriod) * time.Hour)
 	reportAggregate := make(map[time.Time]*StatusReport)
 	fields := reflect.VisibleFields(reflect.TypeOf(struct{ reportData }{}))
 	var i int
@@ -107,28 +111,41 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 					if aggregate.traps[trapField].field == reportField.Name {
 						fieldValue := getReportValue(msg, reportField.Name)
 						fieldName := aggregate.notificationFields[reportField.Name]
-						switch aggregate.traps[trapField].operator {
-						case ">":
-							if checkGreater(fieldValue, aggregate.traps[trapField].trigger) {
-								notificationFlag = true
+						if aggregate.traps[trapField].flag == false {
+							switch aggregate.traps[trapField].operator {
+							case ">":
+								if checkGreater(fieldValue, aggregate.traps[trapField].trigger) {
+									notificationFlag = true
+								}
+							case "<":
+								if checkLess(fieldValue, aggregate.traps[trapField].trigger) {
+									notificationFlag = true
+								}
+							case "=":
+								if checkEqual(fieldValue, aggregate.traps[trapField].trigger) {
+									notificationFlag = true
+								}
 							}
-						case "<":
-							if checkLess(fieldValue, aggregate.traps[trapField].trigger) {
-								notificationFlag = true
+							if notificationFlag == true {
+								var notificationData NotificationTemplate
+								notificationData = setNotification(msg.Tower, fieldName, strconv.FormatInt(fieldValue, 10))
+								subject = msg.Tower + " " + fieldName + " Notification"
+								MailNotification(subject, notificationData)
+								if entry, ok := aggregate.traps[trapField]; ok {
+									entry.flag = true
+									entry.lastNotification = time.Now()
+								}
 							}
-						case "=":
-							if checkEqual(fieldValue, aggregate.traps[trapField].trigger) {
-								notificationFlag = true
-							}
-						}
-						if notificationFlag == true {
-							var notificationData NotificationTemplate
-							notificationData = setNotification(msg.Tower, fieldName, strconv.FormatInt(fieldValue, 10))
-							subject = msg.Tower + " " + fieldName + " Notification"
-							MailNotification(subject, notificationData)
 						}
 					}
-
+				}
+			}
+		case <-periodTicker.C:
+			for trap := range aggregate.traps {
+				if time.Now().After((aggregate.traps[trap].lastNotification).Add(time.Duration(aggregate.traps[trap].period) * time.Hour)) {
+					if entry, ok := aggregate.traps[trap]; ok {
+						entry.flag = false
+					}
 				}
 			}
 		}
@@ -145,12 +162,14 @@ func (aggregate *Aggregate) SetTriggers(traps []traps.Config) {
 				setTrigger.field = t.Field
 				setTrigger.operator = t.Operator
 				setTrigger.trigger, _ = strconv.ParseInt(t.Trigger, 10, 64)
+				setTrigger.period, _ = strconv.Atoi(t.Period)
+				setTrigger.flag = false
 				aggregate.traps[field.Name] = setTrigger
 				log.Printf("%s %s %s\n", t.Field, t.Operator, t.Trigger)
 			}
 		}
 	}
-	aggregate.notificationFields["reboots"] = "Reboots"
+	aggregate.notificationFields["reboots"] = "Daily reboot count"
 	aggregate.notificationFields["usedRAM"] = "MB RAM used"
 	aggregate.notificationFields["usedDisk"] = "GB Disk used"
 	aggregate.notificationFields["cpu"] = "CPU %"
