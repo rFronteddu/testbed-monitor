@@ -179,14 +179,14 @@ var file_measure_proto_goTypes = []interface{}{
 	nil,                           // 2: us.ihmc.proto.sensei.measure.Measure.IntegersEntry
 	nil,                           // 3: us.ihmc.proto.sensei.measure.Measure.DoublesEntry
 	(Subject)(0),                  // 4: us.ihmc.proto.sensei.measure.Subject
-	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
+	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.timestamp
 }
 var file_measure_proto_depIdxs = []int32{
 	4, // 0: us.ihmc.proto.sensei.measure.Measure.subject:type_name -> us.ihmc.proto.sensei.measure.Subject
 	1, // 1: us.ihmc.proto.sensei.measure.Measure.strings:type_name -> us.ihmc.proto.sensei.measure.Measure.StringsEntry
 	2, // 2: us.ihmc.proto.sensei.measure.Measure.integers:type_name -> us.ihmc.proto.sensei.measure.Measure.IntegersEntry
 	3, // 3: us.ihmc.proto.sensei.measure.Measure.doubles:type_name -> us.ihmc.proto.sensei.measure.Measure.DoublesEntry
-	5, // 4: us.ihmc.proto.sensei.measure.Measure.timestamp:type_name -> google.protobuf.Timestamp
+	5, // 4: us.ihmc.proto.sensei.measure.Measure.timestamp:type_name -> google.protobuf.timestamp
 	5, // [5:5] is the sub-list for method output_type
 	5, // [5:5] is the sub-list for method input_type
 	5, // [5:5] is the sub-list for extension type_name

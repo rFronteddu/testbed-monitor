@@ -34,10 +34,10 @@
 <body>
     <table>
         <tr class="header">
-            <th>Testbed Unreachable!</th>
+            <th>Notification for {{ .TowerIP }}</th>
         </tr>
         <tr class="content">
-            Testbed {{ .TestbedIP }} is unreachable at {{ .Timestamp }}
+            {{ .Field }} is {{ .Value }} at {{ .Timestamp }}
         </tr>
     </table>
 </body>

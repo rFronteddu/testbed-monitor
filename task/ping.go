@@ -2,7 +2,6 @@ package task
 
 import (
 	"context"
-	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"io"
@@ -39,7 +38,7 @@ func (task *Ping) execute(HOST_IP string) {
 	r, err := c.Ping(ctx, &pb.PingRequest{TargetAddress: HOST_IP})
 	if err != nil {
 		// host monitor was not reachable!
-		fmt.Println("Could not reach the host!")
+		log.Println("Could not reach the host!")
 		var filename = time.Now().Format("2006-01-02_1504")
 		filename += "_Ping.txt"
 		err := LogPing(filename, "Could not reach the host: "+HOST_IP)
@@ -65,14 +64,14 @@ func LogPing(filename string, data string) error {
 	file, err := os.Create(filename)
 	if err != nil {
 		return err
-		fmt.Printf("Error creating file: %s", err)
+		log.Printf("Error creating file: %s", err)
 	}
 	defer file.Close()
 
 	_, err = io.WriteString(file, data)
 	if err != nil {
 		return err
-		fmt.Printf("Error writing data to file: %s", err)
+		log.Printf("Error writing data to file: %s", err)
 	}
 	return file.Sync()
 }
