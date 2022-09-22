@@ -1,24 +1,7 @@
 [{
-  "id": "1",
   "description": "test",
   "operator": ">",
   "field": "cpu",
   "trigger": "1",
   "period": "12"
-},
-  {
-    "id": "2",
-    "description": "test2",
-    "operator": "=",
-    "field": "reboots",
-    "trigger": "0",
-    "period": "12"
-  },
-  {
-    "id": "2",
-    "description": "test2",
-    "operator": "<",
-    "field": "usedDisk",
-    "trigger": "2000",
-    "period": "12"
-  }]
+}]

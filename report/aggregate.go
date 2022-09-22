@@ -80,17 +80,17 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 				emailData.report = nil
 				unreachableFlag = false
 				if time.Now().Weekday().String() == "Sunday" { // Weekly report on Sundays
+					emailData.reportType = "Weekly"
 					for i = 0; i < len(*iPs); i++ {
 						aggregator(reportAggregate, (*iPs)[i], &aggregatedReport, "Week")
 						emailData.report = append(emailData.report, aggregatedReport)
 					}
-					emailData.reportType = "Weekly"
 				} else { // Daily report
+					emailData.reportType = "24 Hour"
 					for i = 0; i < len(*iPs); i++ {
 						aggregator(reportAggregate, (*iPs)[i], &aggregatedReport, "Day")
 						emailData.report = append(emailData.report, aggregatedReport)
 					}
-					emailData.reportType = "24 Hour"
 				}
 				emailData.timestamp = time.Now().Format("Jan 02 2006 15:04:05")
 				subject = emailData.reportType + " Testbed Status Report " + emailData.timestamp

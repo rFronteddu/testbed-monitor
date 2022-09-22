@@ -7,7 +7,6 @@ import (
 )
 
 type Config struct {
-	Id          string `json:"id"`
 	Description string `json:"description"`
 	Operator    string `json:"operator"`
 	Field       string `json:"field"`
