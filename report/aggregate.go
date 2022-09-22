@@ -127,13 +127,12 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 								}
 							}
 							if notificationFlag == true {
-								var notificationData NotificationTemplate
-								notificationData = setNotification(msg.Tower, fieldName, strconv.FormatInt(fieldValue, 10))
-								subject = msg.Tower + " " + fieldName + " Notification"
-								MailNotification(subject, notificationData)
-								if entry, ok := aggregate.traps[trapField]; ok {
-									entry.flag = true
-									entry.lastNotification = time.Now()
+								if !aggregate.traps[trapField].flag {
+									var notificationData NotificationTemplate
+									notificationData = setNotification(msg.Tower, fieldName, strconv.FormatInt(fieldValue, 10))
+									subject = msg.Tower + " " + fieldName + " Notification"
+									MailNotification(subject, notificationData)
+									aggregate.markFlag(trapField, true)
 								}
 							}
 						}
@@ -143,9 +142,7 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 		case <-periodTicker.C:
 			for trap := range aggregate.traps {
 				if time.Now().After((aggregate.traps[trap].lastNotification).Add(time.Duration(aggregate.traps[trap].period) * time.Hour)) {
-					if entry, ok := aggregate.traps[trap]; ok {
-						entry.flag = false
-					}
+					aggregate.markFlag(trap, false)
 				}
 			}
 		}
@@ -174,6 +171,19 @@ func (aggregate *Aggregate) SetTriggers(traps []traps.Config) {
 	aggregate.notificationFields["usedDisk"] = "GB Disk used"
 	aggregate.notificationFields["cpu"] = "CPU %"
 	aggregate.notificationFields["temperature"] = "Temperature"
+}
+
+func (aggregate *Aggregate) markFlag(fieldName string, value bool) {
+	for _, t := range aggregate.traps {
+		reset := trigger{}
+		reset.field = t.field
+		reset.operator = t.operator
+		reset.trigger = t.trigger
+		reset.period = t.period
+		reset.flag = value
+		reset.lastNotification = time.Now()
+		aggregate.traps[fieldName] = reset
+	}
 }
 
 func (aggregate *Aggregate) postStatusToApp(emailData reportTemplate) {
