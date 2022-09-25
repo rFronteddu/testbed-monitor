@@ -29,4 +29,4 @@ go.work
 # Output files
 testbed-monitor
 main
-testbed_monitor_log
+log

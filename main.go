@@ -51,12 +51,12 @@ func loadConfiguration(path string) *Configuration {
 }
 
 func main() {
-	file, err := os.OpenFile("./testbed_monitor_log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	file, err := os.OpenFile("./log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		log.Fatalf("Unable to create log file\n%s", err)
 	}
 	log.SetOutput(file)
-	fmt.Println("Program output will be logged in ./testbed_monitor_log")
+	fmt.Println("Program output will be logged in ./log")
 
 	err = godotenv.Load(".env")
 	if err != nil {
