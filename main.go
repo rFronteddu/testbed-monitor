@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"log"
+	"os"
 	"strconv"
 	"testbed-monitor/measure"
 	"testbed-monitor/mqtt"
@@ -49,7 +51,14 @@ func loadConfiguration(path string) *Configuration {
 }
 
 func main() {
-	err := godotenv.Load(".env")
+	file, err := os.OpenFile("./testbed_monitor_log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	if err != nil {
+		log.Fatalf("Unable to create log file\n%s", err)
+	}
+	log.SetOutput(file)
+	fmt.Println("Program output will be logged in ./testbed_monitor_log")
+
+	err = godotenv.Load(".env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
