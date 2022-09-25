@@ -100,7 +100,9 @@ func main() {
 
 		aggregate := report.NewAggregate(statusCh, aggregatePeriod, aggregateHour, apiIP, apiPort)
 		traps := traps.LoadConfiguration("traps.json")
-		aggregate.SetTriggers(traps)
+		if traps != nil {
+			aggregate.SetTriggers(traps)
+		}
 		aggregate.Start(&towers)
 	}
 

@@ -60,20 +60,20 @@
             <th>Average CPU</th>
             <th>Max Temperature</th>
         </tr>
-        {{ range .Template }}
+        {{ range .Report }}
         <tr class="content">
             {{ if .Reachable }}
-                <td>{{ .TowerIP }}</td>
+                <td>{{ .Tower }}</td>
             {{ else }}
-                <td class ="unreachable">{{ .TowerIP }}</td>
+                <td class ="unreachable">{{ .Tower }}</td>
             {{ end }}
-            <td>{{ .LastTowerReachableTimestamp }}</td>
-            <td>{{ .LastArduinoReachableTimestamp }}</td>
-            <td>{{ .BootTimestamp }}</td>
-            <td>{{ .RebootsCurrentDay }}</td>
-            <td>{{ .RAMUsedAvgMB }}</td>
-            <td>{{ .DiskUsedAvgGB }}</td>
-            <td>{{ .CPUAvg }}</td>
+            <td>{{ .ArduinoReached }}</td>
+            <td>{{ .TowerReached }}</td>
+            <td>{{ .BootTime }}</td>
+            <td>{{ .Reboots }}</td>
+            <td>{{ .UsedRAM }}</td>
+            <td>{{ .UsedDisk }}</td>
+            <td>{{ .Cpu }}</td>
             <td>{{ .Temperature }}</td>
         </tr>
         {{ end }}

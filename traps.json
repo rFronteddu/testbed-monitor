@@ -1,7 +1,7 @@
 [{
   "description": "test",
   "operator": ">",
-  "field": "cpu",
+  "field": "Cpu",
   "trigger": "1",
   "period": "12"
 }]

@@ -40,7 +40,11 @@ func (r *Request) SendEmail() (bool, error) {
 	mailPort := os.Getenv("MAIL_PORT")
 	fromEmail := os.Getenv("EMAIL")
 	password := os.Getenv("PASSWORD")
-
+	defer func() {
+		if rec := recover(); rec != nil {
+			log.Println("Unable to send email. Recovered.")
+		}
+	}()
 	if err := smtp.SendMail(host+":"+mailPort, smtp.PlainAuth("", fromEmail, password, host), fromEmail, r.to, msg); err != nil {
 		log.Panicf("Error sending email: %s", err)
 		return false, err
@@ -49,6 +53,11 @@ func (r *Request) SendEmail() (bool, error) {
 }
 
 func (r *Request) ParseTemplate(templateFileName string, data interface{}) error {
+	defer func() {
+		if rec := recover(); rec != nil {
+			log.Println("Unable to parse template. Recovered.")
+		}
+	}()
 	t, err := template.ParseFiles(templateFileName)
 	if err != nil {
 		log.Panicf("Error parsing email template %s: %s\n", templateFileName, err)

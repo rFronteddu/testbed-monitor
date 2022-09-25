@@ -52,7 +52,7 @@ The **traps.json** file should declare the following variables, if notifications
   "operator": "",
     - Currently supported operators are <, >, and =
   "field": "",
-    - Currently supported fields are reboots, usedRAM, usedDisk, cpu, and temperature
+    - Currently supported fields are Reboots, UsedRAM, UsedDisk, Cpu, and Temperature
   "trigger": "",
   "period": ""
     - Unit: hours
