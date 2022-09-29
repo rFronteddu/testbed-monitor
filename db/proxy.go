@@ -1,10 +1,10 @@
 package db
 
 import (
+	"log"
 	"testbed-monitor/graph"
 	"testbed-monitor/graph/model"
 	"testbed-monitor/measure"
-	"testbed-monitor/report"
 	"time"
 )
 
@@ -41,7 +41,7 @@ func (proxy *Proxy) processState(hosts []*model.HostStatus) {
 }
 
 func (proxy *Proxy) processReport(m *measure.Measure) {
-	address := m.Strings[report.SENSOR_IP]
+	address := m.Strings["host_id"]
 	raw := proxy.resolver.GetHost(address)
 	if raw == nil {
 		status := getStatusFromMeasure(address, nil, m)
