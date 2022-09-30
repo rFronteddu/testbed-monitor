@@ -23,6 +23,9 @@ go.work
 # .idea files
 .idea/
 
+# mac files
+.DS_Store
+
 # txt ouput files
 *.txt
 

@@ -8,7 +8,7 @@ require (
 	github.com/go-chi/chi v1.5.4
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/websocket v1.4.2
-	github.com/hashicorp/go-memdb v1.3.2
+	github.com/hashicorp/go-memdb v1.3.3
 	github.com/joho/godotenv v1.4.0
 	github.com/rs/cors v1.8.2
 	github.com/vektah/gqlparser/v2 v2.4.0

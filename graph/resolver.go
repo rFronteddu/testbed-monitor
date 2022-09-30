@@ -1,15 +1,15 @@
 package graph
 
-//go:generate go run github.com/99designs/gqlgen generate
-// This file will not be regenerated automatically.
-// It serves as dependency injection for your app, add any dependencies you require here.
-
 import (
 	"github.com/hashicorp/go-memdb"
 	"log"
 	"testbed-monitor/graph/generated"
 	"testbed-monitor/graph/model"
 )
+
+// This file will not be regenerated automatically.
+//
+// It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
 	DB *memdb.MemDB
@@ -54,6 +54,7 @@ func (r *Resolver) CommitHost(hostStatus *model.HostStatus) {
 	}
 	// Commit the transaction
 	txn.Commit()
+	log.Println("Host report committed to DB.")
 }
 
 func NewResolver() (generated.Config, *Resolver) {
@@ -68,85 +69,55 @@ func NewResolver() (generated.Config, *Resolver) {
 						Unique:  true,
 						Indexer: &memdb.StringFieldIndex{Field: "ID"},
 					},
-					"Time": {
-						Name:    "Time",
+					"Tower": {
+						Name:    "Tower",
 						Unique:  false,
-						Indexer: &memdb.StringFieldIndex{Field: "Time"},
+						Indexer: &memdb.StringFieldIndex{Field: "Tower"},
 					},
-					"HostID": {
-						Name:    "HostID",
+					"BoardReached": {
+						Name:    "BoardReached",
 						Unique:  false,
-						Indexer: &memdb.StringFieldIndex{Field: "HostID"},
+						Indexer: &memdb.StringFieldIndex{Field: "BoardReached"},
 					},
-					"HostName": {
-						Name:    "HostName",
+					"TowerReached": {
+						Name:    "TowerReached",
 						Unique:  false,
-						Indexer: &memdb.StringFieldIndex{Field: "HostName"},
-					},
-					"Os": {
-						Name:    "Os",
-						Unique:  false,
-						Indexer: &memdb.StringFieldIndex{Field: "Os"},
-					},
-					"Platform": {
-						Name:    "Platform",
-						Unique:  false,
-						Indexer: &memdb.StringFieldIndex{Field: "Platform"},
-					},
-					"Kernel": {
-						Name:    "Kernel",
-						Unique:  false,
-						Indexer: &memdb.StringFieldIndex{Field: "Kernel"},
+						Indexer: &memdb.StringFieldIndex{Field: "TowerReached"},
 					},
 					"BootTime": {
 						Name:    "BootTime",
 						Unique:  false,
 						Indexer: &memdb.StringFieldIndex{Field: "BootTime"},
 					},
-					"reachable": {
-						Name:    "reachable",
+					"Reboots": {
+						Name:    "Reboots",
 						Unique:  false,
-						Indexer: &memdb.BoolFieldIndex{Field: "reachable"},
+						Indexer: &memdb.IntFieldIndex{Field: "Reboots"},
 					},
-					"VirtualMemoryUsagePercent": {
-						Name:    "VirtualMemoryUsagePercent",
+					"UsedRAM": {
+						Name:    "UsedRAM",
 						Unique:  false,
-						Indexer: &memdb.IntFieldIndex{Field: "VirtualMemoryUsagePercent"},
+						Indexer: &memdb.StringFieldIndex{Field: "UsedRAM"},
 					},
-					"DiskUsagePercent": {
-						Name:    "DiskUsagePercent",
+					"UsedDisk": {
+						Name:    "UsedDisk",
 						Unique:  false,
-						Indexer: &memdb.IntFieldIndex{Field: "DiskUsagePercent"},
+						Indexer: &memdb.StringFieldIndex{Field: "UsedDisk"},
 					},
-					"DiskFree": {
-						Name:    "DiskFree",
+					"CPU": {
+						Name:    "CPU",
 						Unique:  false,
-						Indexer: &memdb.IntFieldIndex{Field: "DiskFree"},
+						Indexer: &memdb.StringFieldIndex{Field: "CPU"},
 					},
-					"cpu": {
-						Name:    "cpu",
+					"Reachable": {
+						Name:    "Reachable",
 						Unique:  false,
-						Indexer: &memdb.IntFieldIndex{Field: "cpu"},
+						Indexer: &memdb.StringFieldIndex{Field: "Reachable"},
 					},
-					"Load1": {
-						Name:    "Load1",
+					"Temperature": {
+						Name:    "Temperature",
 						Unique:  false,
-						Indexer: &memdb.IntFieldIndex{Field: "Load1"},
-					},
-					"VirtualMemoryFree": {
-						Name:    "VirtualMemoryFree",
-						Unique:  false,
-						Indexer: &memdb.IntFieldIndex{Field: "VirtualMemoryFree"},
-					},
-					"Load5": {
-						Name:    "Load5",
-						Unique:  false,
-						Indexer: &memdb.IntFieldIndex{Field: "Load5"},
-					},
-					"Load15": {
-						Name:    "Load15",
-						Unique:  false,
-						Indexer: &memdb.IntFieldIndex{Field: "Load15"},
+						Indexer: &memdb.StringFieldIndex{Field: "Temperature"},
 					},
 				},
 			},
@@ -155,7 +126,6 @@ func NewResolver() (generated.Config, *Resolver) {
 	var err error
 	r.DB, err = memdb.NewMemDB(schema)
 	if err != nil {
-
 		panic(err)
 	}
 	return generated.Config{

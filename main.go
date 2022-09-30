@@ -74,12 +74,6 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	gqlCh := make(chan *measure.Measure)
-	generatedConf, resolver := graph.NewResolver()
-	proxy, _ := db.NewProxy(resolver, gqlCh)
-	proxy.Start()
-	go gqlServer(":8081", generatedConf)
-
 	conf := loadConfiguration("configuration.yaml")
 	if conf.MonitorHosts {
 		measureCh := make(chan *measure.Measure)
@@ -107,6 +101,12 @@ func main() {
 			mqtt.NewSubscriber(conf.MQTTBroker, conf.MQTTTopic, statusCh)
 		}
 
+		//gqlCh := make(chan *measure.Measure)
+		generatedConf, resolver := graph.NewResolver()
+		proxy, _ := db.NewProxy(resolver, measureCh)
+		proxy.Start()
+		go gqlServer(":8081", generatedConf)
+
 		aggregatePeriod := 60
 		if conf.AggregatePeriod != "" {
 			aggregatePeriod, err = strconv.Atoi(conf.AggregatePeriod)
@@ -123,7 +123,6 @@ func main() {
 			}
 			log.Printf("Daily report will be emailed at hour %v\n", conf.AggregateHour)
 		}
-
 		aggregate := report.NewAggregate(statusCh, aggregatePeriod, aggregateHour, apiIP, apiPort)
 		traps := traps.LoadConfiguration("traps.json")
 		if traps != nil {
@@ -175,8 +174,6 @@ func gqlServer(serveAddr string, conf generated.Config) {
 		Upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				// Check against your desired domains here
-				fmt.Printf("Host: %s\n", r.Host)
-				//return r.Host == "http://localhost:3000"
 				return true
 			},
 			ReadBufferSize:  1024,

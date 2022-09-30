@@ -43,26 +43,17 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	HostStatus struct {
-		BootTime                  func(childComplexity int) int
-		CPUAvg                    func(childComplexity int) int
-		DiskFree                  func(childComplexity int) int
-		DiskUsagePercent          func(childComplexity int) int
-		HostID                    func(childComplexity int) int
-		HostName                  func(childComplexity int) int
-		ID                        func(childComplexity int) int
-		Kernel                    func(childComplexity int) int
-		LastBoardReachable        func(childComplexity int) int
-		LastTowerReachable        func(childComplexity int) int
-		Load1                     func(childComplexity int) int
-		Load15                    func(childComplexity int) int
-		Load5                     func(childComplexity int) int
-		Os                        func(childComplexity int) int
-		Platform                  func(childComplexity int) int
-		Reachable                 func(childComplexity int) int
-		RebootsToday              func(childComplexity int) int
-		Time                      func(childComplexity int) int
-		VirtualMemoryFree         func(childComplexity int) int
-		VirtualMemoryUsagePercent func(childComplexity int) int
+		BoardReached func(childComplexity int) int
+		BootTime     func(childComplexity int) int
+		CPU          func(childComplexity int) int
+		ID           func(childComplexity int) int
+		Reachable    func(childComplexity int) int
+		Reboots      func(childComplexity int) int
+		Temperature  func(childComplexity int) int
+		Tower        func(childComplexity int) int
+		TowerReached func(childComplexity int) int
+		UsedDisk     func(childComplexity int) int
+		UsedRAM      func(childComplexity int) int
 	}
 
 	Query struct {
@@ -89,6 +80,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "HostStatus.board_reached":
+		if e.complexity.HostStatus.BoardReached == nil {
+			break
+		}
+
+		return e.complexity.HostStatus.BoardReached(childComplexity), true
+
 	case "HostStatus.boot_time":
 		if e.complexity.HostStatus.BootTime == nil {
 			break
@@ -96,40 +94,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.HostStatus.BootTime(childComplexity), true
 
-	case "HostStatus.cpu_avg":
-		if e.complexity.HostStatus.CPUAvg == nil {
+	case "HostStatus.cpu":
+		if e.complexity.HostStatus.CPU == nil {
 			break
 		}
 
-		return e.complexity.HostStatus.CPUAvg(childComplexity), true
-
-	case "HostStatus.disk_free":
-		if e.complexity.HostStatus.DiskFree == nil {
-			break
-		}
-
-		return e.complexity.HostStatus.DiskFree(childComplexity), true
-
-	case "HostStatus.disk_usage_percent":
-		if e.complexity.HostStatus.DiskUsagePercent == nil {
-			break
-		}
-
-		return e.complexity.HostStatus.DiskUsagePercent(childComplexity), true
-
-	case "HostStatus.host_id":
-		if e.complexity.HostStatus.HostID == nil {
-			break
-		}
-
-		return e.complexity.HostStatus.HostID(childComplexity), true
-
-	case "HostStatus.host_name":
-		if e.complexity.HostStatus.HostName == nil {
-			break
-		}
-
-		return e.complexity.HostStatus.HostName(childComplexity), true
+		return e.complexity.HostStatus.CPU(childComplexity), true
 
 	case "HostStatus.id":
 		if e.complexity.HostStatus.ID == nil {
@@ -138,62 +108,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.HostStatus.ID(childComplexity), true
 
-	case "HostStatus.kernel":
-		if e.complexity.HostStatus.Kernel == nil {
-			break
-		}
-
-		return e.complexity.HostStatus.Kernel(childComplexity), true
-
-	case "HostStatus.last_board_reachable":
-		if e.complexity.HostStatus.LastBoardReachable == nil {
-			break
-		}
-
-		return e.complexity.HostStatus.LastBoardReachable(childComplexity), true
-
-	case "HostStatus.last_tower_reachable":
-		if e.complexity.HostStatus.LastTowerReachable == nil {
-			break
-		}
-
-		return e.complexity.HostStatus.LastTowerReachable(childComplexity), true
-
-	case "HostStatus.load_1":
-		if e.complexity.HostStatus.Load1 == nil {
-			break
-		}
-
-		return e.complexity.HostStatus.Load1(childComplexity), true
-
-	case "HostStatus.load_15":
-		if e.complexity.HostStatus.Load15 == nil {
-			break
-		}
-
-		return e.complexity.HostStatus.Load15(childComplexity), true
-
-	case "HostStatus.load_5":
-		if e.complexity.HostStatus.Load5 == nil {
-			break
-		}
-
-		return e.complexity.HostStatus.Load5(childComplexity), true
-
-	case "HostStatus.os":
-		if e.complexity.HostStatus.Os == nil {
-			break
-		}
-
-		return e.complexity.HostStatus.Os(childComplexity), true
-
-	case "HostStatus.platform":
-		if e.complexity.HostStatus.Platform == nil {
-			break
-		}
-
-		return e.complexity.HostStatus.Platform(childComplexity), true
-
 	case "HostStatus.reachable":
 		if e.complexity.HostStatus.Reachable == nil {
 			break
@@ -201,33 +115,47 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.HostStatus.Reachable(childComplexity), true
 
-	case "HostStatus.reboots_today":
-		if e.complexity.HostStatus.RebootsToday == nil {
+	case "HostStatus.reboots":
+		if e.complexity.HostStatus.Reboots == nil {
 			break
 		}
 
-		return e.complexity.HostStatus.RebootsToday(childComplexity), true
+		return e.complexity.HostStatus.Reboots(childComplexity), true
 
-	case "HostStatus.time":
-		if e.complexity.HostStatus.Time == nil {
+	case "HostStatus.temperature":
+		if e.complexity.HostStatus.Temperature == nil {
 			break
 		}
 
-		return e.complexity.HostStatus.Time(childComplexity), true
+		return e.complexity.HostStatus.Temperature(childComplexity), true
 
-	case "HostStatus.virtual_memory_free":
-		if e.complexity.HostStatus.VirtualMemoryFree == nil {
+	case "HostStatus.tower":
+		if e.complexity.HostStatus.Tower == nil {
 			break
 		}
 
-		return e.complexity.HostStatus.VirtualMemoryFree(childComplexity), true
+		return e.complexity.HostStatus.Tower(childComplexity), true
 
-	case "HostStatus.virtual_memory_usage_percent":
-		if e.complexity.HostStatus.VirtualMemoryUsagePercent == nil {
+	case "HostStatus.tower_reached":
+		if e.complexity.HostStatus.TowerReached == nil {
 			break
 		}
 
-		return e.complexity.HostStatus.VirtualMemoryUsagePercent(childComplexity), true
+		return e.complexity.HostStatus.TowerReached(childComplexity), true
+
+	case "HostStatus.used_disk":
+		if e.complexity.HostStatus.UsedDisk == nil {
+			break
+		}
+
+		return e.complexity.HostStatus.UsedDisk(childComplexity), true
+
+	case "HostStatus.used_ram":
+		if e.complexity.HostStatus.UsedRAM == nil {
+			break
+		}
+
+		return e.complexity.HostStatus.UsedRAM(childComplexity), true
 
 	case "Query.hosts":
 		if e.complexity.Query.Hosts == nil {
@@ -286,36 +214,27 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "graph/schema.graphqls", Input: `# GraphQL schema
-# Update this file, then run  go run github.com/99designs/gqlgen generate
+	{Name: "graph/schema.graphqls", Input: `# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
 
 type HostStatus {
   id: ID!
-  time: String!
-  host_id: String!
-  host_name: String!
-  os: String!
-  platform: String!
-  kernel: String!
+  tower: String!
+  board_reached: String!
+  tower_reached: String!
   boot_time: String!
+  reboots: Int!
+  used_ram: String!
+  used_disk: String!
+  cpu: String!
   reachable: Boolean!
-  disk_usage_percent: Int!
-  disk_free: Int!
-  cpu_avg: Int!
-  load_1: Int!
-  load_5: Int!
-  load_15: Int!
-  virtual_memory_free: Int!
-  virtual_memory_usage_percent: Int!
-  last_tower_reachable: String!
-  last_board_reachable: String!
-  reboots_today: Int!
+  temperature: String!
 }
 
 type Query {
   hosts: [HostStatus!]!
-}
-`, BuiltIn: false},
+}`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -411,7 +330,7 @@ func (ec *executionContext) _HostStatus_id(ctx context.Context, field graphql.Co
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _HostStatus_time(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
+func (ec *executionContext) _HostStatus_tower(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -429,7 +348,7 @@ func (ec *executionContext) _HostStatus_time(ctx context.Context, field graphql.
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Time, nil
+		return obj.Tower, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -446,7 +365,7 @@ func (ec *executionContext) _HostStatus_time(ctx context.Context, field graphql.
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _HostStatus_host_id(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
+func (ec *executionContext) _HostStatus_board_reached(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -464,7 +383,7 @@ func (ec *executionContext) _HostStatus_host_id(ctx context.Context, field graph
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.HostID, nil
+		return obj.BoardReached, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -481,7 +400,7 @@ func (ec *executionContext) _HostStatus_host_id(ctx context.Context, field graph
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _HostStatus_host_name(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
+func (ec *executionContext) _HostStatus_tower_reached(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -499,112 +418,7 @@ func (ec *executionContext) _HostStatus_host_name(ctx context.Context, field gra
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.HostName, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _HostStatus_os(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "HostStatus",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Os, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _HostStatus_platform(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "HostStatus",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Platform, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _HostStatus_kernel(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "HostStatus",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Kernel, nil
+		return obj.TowerReached, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -656,6 +470,146 @@ func (ec *executionContext) _HostStatus_boot_time(ctx context.Context, field gra
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _HostStatus_reboots(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "HostStatus",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Reboots, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _HostStatus_used_ram(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "HostStatus",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UsedRAM, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _HostStatus_used_disk(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "HostStatus",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UsedDisk, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _HostStatus_cpu(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "HostStatus",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CPU, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _HostStatus_reachable(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -691,7 +645,7 @@ func (ec *executionContext) _HostStatus_reachable(ctx context.Context, field gra
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _HostStatus_disk_usage_percent(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
+func (ec *executionContext) _HostStatus_temperature(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -709,287 +663,7 @@ func (ec *executionContext) _HostStatus_disk_usage_percent(ctx context.Context, 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.DiskUsagePercent, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _HostStatus_disk_free(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "HostStatus",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.DiskFree, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _HostStatus_cpu_avg(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "HostStatus",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CPUAvg, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _HostStatus_load_1(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "HostStatus",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Load1, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _HostStatus_load_5(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "HostStatus",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Load5, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _HostStatus_load_15(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "HostStatus",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Load15, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _HostStatus_virtual_memory_free(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "HostStatus",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.VirtualMemoryFree, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _HostStatus_virtual_memory_usage_percent(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "HostStatus",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.VirtualMemoryUsagePercent, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _HostStatus_last_tower_reachable(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "HostStatus",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LastTowerReachable, nil
+		return obj.Temperature, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1004,76 +678,6 @@ func (ec *executionContext) _HostStatus_last_tower_reachable(ctx context.Context
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _HostStatus_last_board_reachable(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "HostStatus",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LastBoardReachable, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _HostStatus_reboots_today(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "HostStatus",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.RebootsToday, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_hosts(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2396,9 +2000,9 @@ func (ec *executionContext) _HostStatus(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "time":
+		case "tower":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._HostStatus_time(ctx, field, obj)
+				return ec._HostStatus_tower(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
@@ -2406,9 +2010,9 @@ func (ec *executionContext) _HostStatus(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "host_id":
+		case "board_reached":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._HostStatus_host_id(ctx, field, obj)
+				return ec._HostStatus_board_reached(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
@@ -2416,39 +2020,9 @@ func (ec *executionContext) _HostStatus(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "host_name":
+		case "tower_reached":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._HostStatus_host_name(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "os":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._HostStatus_os(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "platform":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._HostStatus_platform(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "kernel":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._HostStatus_kernel(ctx, field, obj)
+				return ec._HostStatus_tower_reached(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
@@ -2466,6 +2040,46 @@ func (ec *executionContext) _HostStatus(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "reboots":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._HostStatus_reboots(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "used_ram":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._HostStatus_used_ram(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "used_disk":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._HostStatus_used_disk(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "cpu":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._HostStatus_cpu(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "reachable":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._HostStatus_reachable(ctx, field, obj)
@@ -2476,109 +2090,9 @@ func (ec *executionContext) _HostStatus(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "disk_usage_percent":
+		case "temperature":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._HostStatus_disk_usage_percent(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "disk_free":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._HostStatus_disk_free(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "cpu_avg":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._HostStatus_cpu_avg(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "load_1":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._HostStatus_load_1(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "load_5":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._HostStatus_load_5(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "load_15":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._HostStatus_load_15(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "virtual_memory_free":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._HostStatus_virtual_memory_free(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "virtual_memory_usage_percent":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._HostStatus_virtual_memory_usage_percent(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "last_tower_reachable":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._HostStatus_last_tower_reachable(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "last_board_reachable":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._HostStatus_last_board_reachable(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "reboots_today":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._HostStatus_reboots_today(ctx, field, obj)
+				return ec._HostStatus_temperature(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)

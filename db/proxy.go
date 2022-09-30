@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"log"
 	"testbed-monitor/graph"
 	"testbed-monitor/graph/model"
@@ -41,78 +42,47 @@ func (proxy *Proxy) processState(hosts []*model.HostStatus) {
 }
 
 func (proxy *Proxy) processReport(m *measure.Measure) {
+	fmt.Println("Processing report.")
 	address := m.Strings["host_id"]
 	raw := proxy.resolver.GetHost(address)
 	if raw == nil {
-		status := getStatusFromMeasure(address, nil, m)
+		status := copyHostStatus(address, nil, m)
 		proxy.resolver.CommitHost(status)
 	} else {
 		x := raw.(*model.HostStatus)
 		log.Printf("Got raw: %v\n", x)
-		proxy.resolver.CommitHost(getStatusFromMeasure(address, x, m))
+		proxy.resolver.CommitHost(copyHostStatus(address, x, m))
 	}
 }
 
-func getStatusFromMeasure(ip string, old *model.HostStatus, m *measure.Measure) *model.HostStatus {
+func copyHostStatus(ip string, old *model.HostStatus, m *measure.Measure) *model.HostStatus {
 	var newStatus model.HostStatus
 	if old == nil {
 		newStatus = model.HostStatus{
-			BootTime: "-",
-			HostName: "-",
-			HostID:   "-",
-			Os:       "-",
-			Platform: "-",
-			Kernel:   "-",
+			BootTime:    "-",
+			Reboots:     0,
+			Reachable:   true,
+			Temperature: "-",
+			// define all strings here?????
 		}
 
 	} else {
 		newStatus = *old
 	}
-
-	newStatus.Time = time.Now().Format(time.RFC1123)
-
 	newStatus.ID = ip
+	newStatus.Tower = ip
 	if cpu := int(m.Integers["CPU_AVG"]); cpu != 0 {
-		newStatus.CPUAvg = cpu
+		newStatus.CPU = string(cpu)
 	}
 	if diskUsage := int(m.Integers["DISK_USAGE"]); diskUsage != 0 {
-		newStatus.DiskUsagePercent = diskUsage
-	}
-	if diskFree := int(m.Integers["DISK_FREE"]); diskFree != 0 {
-		newStatus.DiskFree = diskFree
-	}
-	if load1 := int(m.Integers["LOAD_1"]); load1 != 0 {
-		newStatus.Load1 = load1
-	}
-	if load5 := int(m.Integers["LOAD_5"]); load5 != 0 {
-		newStatus.Load5 = load5
-	}
-	if load15 := int(m.Integers["LOAD_15"]); load15 != 0 {
-		newStatus.Load15 = load15
+		newStatus.UsedDisk = string(diskUsage)
 	}
 	if usedPercent := int(m.Integers["vm_used_percent"]); usedPercent != 0 {
-		newStatus.VirtualMemoryUsagePercent = usedPercent
-	}
-	if free := int(m.Integers["vm_free"]); free != 0 {
-		newStatus.VirtualMemoryFree = free
-	}
-	if hostID := m.Strings["host_id"]; hostID != "" {
-		newStatus.HostID = hostID
-	}
-	if hostName := m.Strings["host_name"]; hostName != "" {
-		newStatus.HostName = hostName
-	}
-	if os := m.Strings["os"]; os != "" {
-		newStatus.Os = os
-	}
-	if platform := m.Strings["platform"]; platform != "" {
-		newStatus.Platform = platform
-	}
-	if kernel := m.Strings["kernelArch"]; kernel != "" {
-		newStatus.Kernel = kernel
+		newStatus.UsedRAM = string(usedPercent)
 	}
 	if bootTime := m.Strings["bootTime"]; bootTime != "" {
 		newStatus.BootTime = bootTime
 	}
+	fmt.Println("Host Status copied.")
 	return &newStatus
 }
