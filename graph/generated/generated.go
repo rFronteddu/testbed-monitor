@@ -50,7 +50,6 @@ type ComplexityRoot struct {
 		Reachable    func(childComplexity int) int
 		Reboots      func(childComplexity int) int
 		Temperature  func(childComplexity int) int
-		Tower        func(childComplexity int) int
 		TowerReached func(childComplexity int) int
 		UsedDisk     func(childComplexity int) int
 		UsedRAM      func(childComplexity int) int
@@ -128,13 +127,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.HostStatus.Temperature(childComplexity), true
-
-	case "HostStatus.tower":
-		if e.complexity.HostStatus.Tower == nil {
-			break
-		}
-
-		return e.complexity.HostStatus.Tower(childComplexity), true
 
 	case "HostStatus.tower_reached":
 		if e.complexity.HostStatus.TowerReached == nil {
@@ -220,7 +212,6 @@ var sources = []*ast.Source{
 
 type HostStatus {
   id: ID!
-  tower: String!
   board_reached: String!
   tower_reached: String!
   boot_time: String!
@@ -328,41 +319,6 @@ func (ec *executionContext) _HostStatus_id(ctx context.Context, field graphql.Co
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _HostStatus_tower(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "HostStatus",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Tower, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _HostStatus_board_reached(ctx context.Context, field graphql.CollectedField, obj *model.HostStatus) (ret graphql.Marshaler) {
@@ -1993,16 +1949,6 @@ func (ec *executionContext) _HostStatus(ctx context.Context, sel ast.SelectionSe
 		case "id":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._HostStatus_id(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "tower":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._HostStatus_tower(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)

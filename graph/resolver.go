@@ -54,7 +54,6 @@ func (r *Resolver) CommitHost(hostStatus *model.HostStatus) {
 	}
 	// Commit the transaction
 	txn.Commit()
-	log.Println("Host report committed to DB.")
 }
 
 func NewResolver() (generated.Config, *Resolver) {
@@ -68,11 +67,6 @@ func NewResolver() (generated.Config, *Resolver) {
 						Name:    "id",
 						Unique:  true,
 						Indexer: &memdb.StringFieldIndex{Field: "ID"},
-					},
-					"Tower": {
-						Name:    "Tower",
-						Unique:  false,
-						Indexer: &memdb.StringFieldIndex{Field: "Tower"},
 					},
 					"BoardReached": {
 						Name:    "BoardReached",

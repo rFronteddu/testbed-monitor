@@ -1,88 +1,103 @@
 package db
 
 import (
-	"fmt"
 	"log"
+	"strconv"
 	"testbed-monitor/graph"
 	"testbed-monitor/graph/model"
-	"testbed-monitor/measure"
-	"time"
+	"testbed-monitor/report"
 )
 
 type Proxy struct {
-	resolver  *graph.Resolver
-	measureCh chan *measure.Measure
+	resolver *graph.Resolver
+	statusCh chan *report.StatusReport
 }
 
-func NewProxy(resolver *graph.Resolver, measureCh chan *measure.Measure) (*Proxy, error) {
+func NewProxy(resolver *graph.Resolver, statusCh chan *report.StatusReport) (*Proxy, error) {
 	proxy := new(Proxy)
 	proxy.resolver = resolver
-	proxy.measureCh = measureCh
+	proxy.statusCh = statusCh
 	return proxy, nil
 }
 
 func (proxy *Proxy) Start() {
 	go func() {
-		timer := time.NewTimer(time.Minute)
+		//timer := time.NewTimer(time.Minute)
 		for {
 			select {
-			case m := <-proxy.measureCh:
-				proxy.processReport(m)
-			case <-timer.C:
-				timer = time.NewTimer(time.Minute)
-				hosts, _ := proxy.resolver.GetHosts()
-				proxy.processState(hosts)
+			case s := <-proxy.statusCh:
+				proxy.processReport(s)
+				//case <-timer.C:
+				//	timer = time.NewTimer(time.Minute)
+				//	hosts, _ := proxy.resolver.GetHosts()
+				//	proxy.processState(hosts)
 			}
 		}
 	}()
 }
 
-func (proxy *Proxy) processState(hosts []*model.HostStatus) {
+//func (proxy *Proxy) processState(hosts []*model.HostStatus) {}
 
-}
-
-func (proxy *Proxy) processReport(m *measure.Measure) {
-	fmt.Println("Processing report.")
-	address := m.Strings["host_id"]
-	raw := proxy.resolver.GetHost(address)
+func (proxy *Proxy) processReport(s *report.StatusReport) {
+	ip := s.Tower
+	raw := proxy.resolver.GetHost(ip)
 	if raw == nil {
-		status := copyHostStatus(address, nil, m)
+		status := copyHostStatus(ip, nil, s)
 		proxy.resolver.CommitHost(status)
 	} else {
 		x := raw.(*model.HostStatus)
 		log.Printf("Got raw: %v\n", x)
-		proxy.resolver.CommitHost(copyHostStatus(address, x, m))
+		proxy.resolver.CommitHost(copyHostStatus(ip, x, s))
 	}
 }
 
-func copyHostStatus(ip string, old *model.HostStatus, m *measure.Measure) *model.HostStatus {
+func copyHostStatus(ip string, old *model.HostStatus, s *report.StatusReport) *model.HostStatus {
 	var newStatus model.HostStatus
 	if old == nil {
 		newStatus = model.HostStatus{
-			BootTime:    "-",
-			Reboots:     0,
-			Reachable:   true,
-			Temperature: "-",
-			// define all strings here?????
+			BoardReached: "-",
+			TowerReached: "-",
+			BootTime:     "-",
+			Reboots:      0,
+			UsedRAM:      "-",
+			UsedDisk:     "-",
+			CPU:          "-",
+			Reachable:    true,
+			Temperature:  "-",
 		}
 
 	} else {
 		newStatus = *old
 	}
 	newStatus.ID = ip
-	newStatus.Tower = ip
-	if cpu := int(m.Integers["CPU_AVG"]); cpu != 0 {
-		newStatus.CPU = string(cpu)
+	if boardReached := s.ArduinoReached; boardReached != "" {
+		newStatus.BoardReached = boardReached
 	}
-	if diskUsage := int(m.Integers["DISK_USAGE"]); diskUsage != 0 {
-		newStatus.UsedDisk = string(diskUsage)
+	if towerReached := s.TowerReached; towerReached != "" {
+		newStatus.TowerReached = towerReached
 	}
-	if usedPercent := int(m.Integers["vm_used_percent"]); usedPercent != 0 {
-		newStatus.UsedRAM = string(usedPercent)
-	}
-	if bootTime := m.Strings["bootTime"]; bootTime != "" {
+	if bootTime := s.BootTime; bootTime != "" {
 		newStatus.BootTime = bootTime
 	}
-	fmt.Println("Host Status copied.")
+	if reboots := int(s.Reboots); reboots != 0 {
+		newStatus.Reboots = reboots
+	}
+	if usedRAM := s.UsedRAM; usedRAM > 0 {
+		newStatus.UsedRAM = strconv.FormatInt(usedRAM, 10) + "/" + strconv.FormatInt(s.TotalRAM, 10)
+	}
+	if usedDisk := s.UsedDisk; usedDisk > 0 {
+		newStatus.UsedDisk = strconv.FormatInt(usedDisk, 10) + "/" + strconv.FormatInt(s.TotalDisk, 10)
+	}
+	if cpu := s.Cpu; cpu > 0 {
+		newStatus.CPU = strconv.FormatInt(cpu, 10)
+	}
+	if reachable := s.Reachable; reachable == false {
+		newStatus.Reachable = false
+	} else {
+		newStatus.Reachable = true
+	}
+	if temperature := s.Temperature; temperature > 0 {
+		newStatus.Temperature = strconv.FormatInt(temperature, 10)
+	}
 	return &newStatus
 }

@@ -1,10 +1,7 @@
-# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
+# To generate, go run github.com/99designs/gqlgen generate
 
 type HostStatus {
   id: ID!
-  tower: String!
   board_reached: String!
   tower_reached: String!
   boot_time: String!

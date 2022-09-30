@@ -4,7 +4,6 @@ package model
 
 type HostStatus struct {
 	ID           string `json:"id"`
-	Tower        string `json:"tower"`
 	BoardReached string `json:"board_reached"`
 	TowerReached string `json:"tower_reached"`
 	BootTime     string `json:"boot_time"`

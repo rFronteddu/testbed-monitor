@@ -31,7 +31,8 @@ type Configuration struct {
 	AggregatePeriod      string `yaml:"AGGREGATE_PERIOD"`
 	AggregateHour        string `yaml:"AGGREGATE_HOUR"`
 	ExpectedReportPeriod string `yaml:"EXPECTED_REPORT_PERIOD"`
-	APIIP                string `yaml:"API_IP"`
+	GQLPort              string `yaml:"GQL_PORT"`
+	APIip                string `yaml:"API_IP"`
 	APIPort              string `yaml:"API_PORT"`
 	CriticalTemp         string `yaml:"CRITICAL_TEMP"`
 	MonitorTestbed       bool   `yaml:"MONITOR_TESTBED"`
@@ -45,7 +46,7 @@ func loadConfiguration(path string) *Configuration {
 	yfile, err := ioutil.ReadFile(path)
 	if err != nil {
 		log.Printf("Could not open %s error: %s\n", path, err)
-		conf := &Configuration{true, "8758", "60", "23", "30", "", "4100", "200", false, "", "30", "", ""}
+		conf := &Configuration{true, "8758", "60", "23", "30", "8081", "", "4100", "200", false, "", "30", "", ""}
 		log.Printf("Host Monitor will use default configuration: %v\n", conf)
 		return conf
 	}
@@ -79,7 +80,7 @@ func main() {
 		measureCh := make(chan *measure.Measure)
 		statusCh := make(chan *report.StatusReport)
 		var towers []string
-		apiIP := conf.APIIP
+		apiIP := conf.APIip
 		apiPort := conf.APIPort
 		log.Printf("Data will be posted to the API on port %s\n", conf.APIPort)
 		expectedReportPeriod := 30
@@ -101,11 +102,11 @@ func main() {
 			mqtt.NewSubscriber(conf.MQTTBroker, conf.MQTTTopic, statusCh)
 		}
 
-		//gqlCh := make(chan *measure.Measure)
 		generatedConf, resolver := graph.NewResolver()
-		proxy, _ := db.NewProxy(resolver, measureCh)
+		proxy, _ := db.NewProxy(resolver, statusCh)
 		proxy.Start()
-		go gqlServer(":8081", generatedConf)
+		gqlPort := conf.GQLPort
+		go gqlServer(":"+gqlPort, generatedConf)
 
 		aggregatePeriod := 60
 		if conf.AggregatePeriod != "" {
@@ -145,21 +146,18 @@ func main() {
 		monitor.Start(testbedIP, pingPeriod)
 	}
 
-	quitCh := make(chan int)
-	<-quitCh
-
-	////// UNTESTED ///////
-	logFlush := time.NewTicker(time.Hour * 24 * 7)
-	for {
-		select {
-		case <-logFlush.C:
-			_, err = os.Create("./log")
-			if err != nil {
-				log.Fatalf("Unable to clear log file\n%s", err)
+	// Flush the log every week
+	go func() {
+		logFlush := time.NewTicker(time.Hour * 24 * 7)
+		for {
+			select {
+			case <-logFlush.C:
+				if err != nil {
+					log.Fatalf("Unable to clear log file\n%s", err)
+				}
 			}
 		}
-	}
-	////// UNTESTED ///////
+	}()
 }
 
 func gqlServer(serveAddr string, conf generated.Config) {

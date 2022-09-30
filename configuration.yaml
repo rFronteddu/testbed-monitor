@@ -8,7 +8,9 @@ AGGREGATE_PERIOD: "2"
 AGGREGATE_HOUR: "20"
 # How long should the receiver wait for a host report before trying to ping
 EXPECTED_REPORT_PERIOD: "1"
-# What temperature should trigger a warning notification
+# The port to access GQL playground on server
+GQL_PORT: "8081"
+# The address and port of the custom API
 API_IP: "127.0.0.1"
 API_PORT: "4100"
 # What is the MQTT broker to subscribe to
