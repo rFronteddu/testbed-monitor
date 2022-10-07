@@ -10,11 +10,11 @@ import (
 
 // Message The structs are defined from schema.json
 type Message struct {
-	Location    Location      `json:"location"`
-	Measurement []Measurement `json:"measurement"`
-	SensorType  string        `json:"sensorType"`
-	Time        string        `json:"time"`
-	Tower       string        `json:"tower"`
+	Location   Location      `json:"location"`
+	Reading    []Measurement `json:"reading"`
+	SensorType string        `json:"sensorType"`
+	Time       string        `json:"time"`
+	Tower      string        `json:"tower"`
 }
 type Measurement struct {
 	Measurement string `json:"measurement"`
@@ -22,8 +22,8 @@ type Measurement struct {
 	Value       string `json:"value"`
 }
 type Location struct {
-	Latitude  string `json:"lat"`
-	Longitude string `json:"long"`
+	Lat string `json:"lat"`
+	Lon string `json:"lon"`
 }
 
 func ContainsTemperature(data []byte) (containsTemperature bool) {
@@ -33,8 +33,8 @@ func ContainsTemperature(data []byte) (containsTemperature bool) {
 		log.Printf("Error unmarshalling json: %s\n", err)
 	}
 	containsTemperature = false
-	for i := range message.Measurement {
-		if message.Measurement[i].Name == "temperature" {
+	for i := range message.Reading {
+		if message.Reading[i].Name == "temperature" {
 			containsTemperature = true
 		}
 	}
@@ -58,9 +58,9 @@ func Parse(data []byte) (tower string, temperature int, timestamp time.Time) {
 	timestamp = time.Unix(int64(utime), 0)
 
 	var temperatureS string
-	for i := range message.Measurement {
-		if message.Measurement[i].Name == "temperature" {
-			temperatureS = message.Measurement[i].Value
+	for i := range message.Reading {
+		if message.Reading[i].Name == "temperature" {
+			temperatureS = message.Reading[i].Value
 		}
 	}
 	temperatureF, errF := strconv.ParseFloat(temperatureS, 64)
