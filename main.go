@@ -158,6 +158,9 @@ func main() {
 			}
 		}
 	}()
+
+	quitCh := make(chan int)
+	<-quitCh
 }
 
 func gqlServer(serveAddr string, conf generated.Config) {
