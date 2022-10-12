@@ -73,81 +73,84 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 	reportAggregate := make(map[time.Time]*StatusReport)
 	fields := reflect.VisibleFields(reflect.TypeOf(struct{ reportData }{}))
 	var i int
-	for {
-		select {
-		case <-dailyTicker.C:
-			if time.Now().Hour() == aggregate.aggregateHour {
-				emailData.Report = nil
-				emailData.ReportType = "hello"
-				unreachableFlag = false
-				if time.Now().Weekday().String() == "Sunday" { // Weekly report on Sundays
-					emailData.ReportType = "Weekly"
-					for i = 0; i < len(*iPs); i++ {
-						aggregator(reportAggregate, (*iPs)[i], &aggregatedReport, "Week")
-						emailData.Report = append(emailData.Report, aggregatedReport)
+	// Go func to handle & aggregate reports
+	go func() {
+		for {
+			select {
+			case <-dailyTicker.C:
+				if time.Now().Hour() == aggregate.aggregateHour {
+					emailData.Report = nil
+					emailData.ReportType = "hello"
+					unreachableFlag = false
+					if time.Now().Weekday().String() == "Sunday" { // Weekly report on Sundays
+						emailData.ReportType = "Weekly"
+						for i = 0; i < len(*iPs); i++ {
+							aggregator(reportAggregate, (*iPs)[i], &aggregatedReport, "Week")
+							emailData.Report = append(emailData.Report, aggregatedReport)
+						}
+					} else { // Daily report
+						emailData.ReportType = "24 Hour"
+						for i = 0; i < len(*iPs); i++ {
+							aggregator(reportAggregate, (*iPs)[i], &aggregatedReport, "Day")
+							emailData.Report = append(emailData.Report, aggregatedReport)
+						}
 					}
-				} else { // Daily report
-					emailData.ReportType = "24 Hour"
-					for i = 0; i < len(*iPs); i++ {
-						aggregator(reportAggregate, (*iPs)[i], &aggregatedReport, "Day")
-						emailData.Report = append(emailData.Report, aggregatedReport)
+					emailData.Timestamp = time.Now().Format("Jan 02 2006 15:04:05")
+					subject = emailData.ReportType + " Testbed Status Report " + emailData.Timestamp
+					if unreachableFlag {
+						subject += ": 1 or more towers is down!"
 					}
+					MailReport(subject, emailData)
+					aggregate.postStatusToApp(emailData)
 				}
-				emailData.Timestamp = time.Now().Format("Jan 02 2006 15:04:05")
-				subject = emailData.ReportType + " Testbed Status Report " + emailData.Timestamp
-				if unreachableFlag {
-					subject += ": 1 or more towers is down!"
+			case msg := <-aggregate.statusChan:
+				reportAggregate[time.Now()] = msg
+				if !msg.Reachable {
+					aggregate.towerAlertInApp(msg.Tower)
 				}
-				MailReport(subject, emailData)
-				aggregate.postStatusToApp(emailData)
-			}
-		case msg := <-aggregate.statusChan:
-			reportAggregate[time.Now()] = msg
-			if !msg.Reachable {
-				aggregate.towerAlertInApp(msg.Tower)
-			}
-			notificationFlag = false
-			for trapField := range aggregate.traps {
-				for _, reportField := range fields {
-					if aggregate.traps[trapField].field == reportField.Name {
-						fieldValue := getReportValue(msg, reportField.Name)
-						fieldName := aggregate.notificationFields[reportField.Name]
-						if aggregate.traps[trapField].flag == false {
-							switch aggregate.traps[trapField].operator {
-							case ">":
-								if checkGreater(fieldValue, aggregate.traps[trapField].trigger) {
-									notificationFlag = true
+				notificationFlag = false
+				for trapField := range aggregate.traps {
+					for _, reportField := range fields {
+						if aggregate.traps[trapField].field == reportField.Name {
+							fieldValue := getReportValue(msg, reportField.Name)
+							fieldName := aggregate.notificationFields[reportField.Name]
+							if aggregate.traps[trapField].flag == false {
+								switch aggregate.traps[trapField].operator {
+								case ">":
+									if checkGreater(fieldValue, aggregate.traps[trapField].trigger) {
+										notificationFlag = true
+									}
+								case "<":
+									if checkLess(fieldValue, aggregate.traps[trapField].trigger) {
+										notificationFlag = true
+									}
+								case "=":
+									if checkEqual(fieldValue, aggregate.traps[trapField].trigger) {
+										notificationFlag = true
+									}
 								}
-							case "<":
-								if checkLess(fieldValue, aggregate.traps[trapField].trigger) {
-									notificationFlag = true
-								}
-							case "=":
-								if checkEqual(fieldValue, aggregate.traps[trapField].trigger) {
-									notificationFlag = true
-								}
-							}
-							if notificationFlag == true {
-								if !aggregate.traps[trapField].flag {
-									var notificationData NotificationTemplate
-									notificationData = setNotification(msg.Tower, fieldName, strconv.FormatInt(fieldValue, 10))
-									subject = msg.Tower + " " + fieldName + " Notification"
-									MailNotification(subject, notificationData)
-									aggregate.markFlag(trapField, true)
+								if notificationFlag == true {
+									if !aggregate.traps[trapField].flag {
+										var notificationData NotificationTemplate
+										notificationData = setNotification(msg.Tower, fieldName, strconv.FormatInt(fieldValue, 10))
+										subject = msg.Tower + " " + fieldName + " Notification"
+										MailNotification(subject, notificationData)
+										aggregate.markFlag(trapField, true)
+									}
 								}
 							}
 						}
 					}
 				}
-			}
-		case <-periodTicker.C:
-			for trap := range aggregate.traps {
-				if time.Now().After((aggregate.traps[trap].lastNotification).Add(time.Duration(aggregate.traps[trap].period) * time.Hour)) {
-					aggregate.markFlag(trap, false)
+			case <-periodTicker.C:
+				for trap := range aggregate.traps {
+					if time.Now().After((aggregate.traps[trap].lastNotification).Add(time.Duration(aggregate.traps[trap].period) * time.Hour)) {
+						aggregate.markFlag(trap, false)
+					}
 				}
 			}
 		}
-	}
+	}()
 }
 
 func (aggregate *Aggregate) SetTriggers(traps []traps.Config) {
@@ -194,7 +197,7 @@ func (aggregate *Aggregate) postStatusToApp(emailData reportTemplate) {
 	if errJ != nil {
 		log.Println("Error creating json object: ", errJ)
 	}
-	_, err := http.Post("http://"+apiAddress+"/towers", "application/json", bytes.NewBuffer(jsonReport))
+	_, err := http.Post("http://"+apiAddress+"/api/towerreport", "application/json", bytes.NewBuffer(jsonReport))
 	if err != nil {
 		log.Println("Error posting to API", err)
 	}
@@ -202,7 +205,7 @@ func (aggregate *Aggregate) postStatusToApp(emailData reportTemplate) {
 
 func (aggregate *Aggregate) towerAlertInApp(alertIP string) {
 	apiAddress := aggregate.apiIP + ":" + aggregate.apiPort
-	_, err := http.Get("http://" + apiAddress + "/alert/" + alertIP)
+	_, err := http.Get("http://" + apiAddress + "/api/alert/" + alertIP)
 	if err != nil {
 		log.Println("Error posting to API", err)
 	}

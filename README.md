@@ -30,6 +30,8 @@ AGGREGATE_PERIOD: "2"
 AGGREGATE_HOUR: "23"
 # How long should the receiver wait for a host report before trying to ping
 EXPECTED_REPORT_PERIOD: "1"
+# The port to access GQL playground on server
+GQL_PORT: "8081"
 # The IP address and port to post/get data to the API
 API_IP: ""
 API_PORT: "4100"

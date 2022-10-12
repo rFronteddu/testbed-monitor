@@ -3,24 +3,14 @@
 package model
 
 type HostStatus struct {
-	ID                        string `json:"id"`
-	Time                      string `json:"time"`
-	HostID                    string `json:"host_id"`
-	HostName                  string `json:"host_name"`
-	Os                        string `json:"os"`
-	Platform                  string `json:"platform"`
-	Kernel                    string `json:"kernel"`
-	BootTime                  string `json:"boot_time"`
-	Reachable                 bool   `json:"reachable"`
-	DiskUsagePercent          int    `json:"disk_usage_percent"`
-	DiskFree                  int    `json:"disk_free"`
-	CPUAvg                    int    `json:"cpu_avg"`
-	Load1                     int    `json:"load_1"`
-	Load5                     int    `json:"load_5"`
-	Load15                    int    `json:"load_15"`
-	VirtualMemoryFree         int    `json:"virtual_memory_free"`
-	VirtualMemoryUsagePercent int    `json:"virtual_memory_usage_percent"`
-	LastTowerReachable        string `json:"last_tower_reachable"`
-	LastBoardReachable        string `json:"last_board_reachable"`
-	RebootsToday              int    `json:"reboots_today"`
+	ID           string `json:"id"`
+	BoardReached string `json:"board_reached"`
+	TowerReached string `json:"tower_reached"`
+	BootTime     string `json:"boot_time"`
+	Reboots      int    `json:"reboots"`
+	UsedRAM      string `json:"used_ram"`
+	UsedDisk     string `json:"used_disk"`
+	CPU          string `json:"cpu"`
+	Reachable    bool   `json:"reachable"`
+	Temperature  string `json:"temperature"`
 }
