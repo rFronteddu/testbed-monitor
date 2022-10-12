@@ -197,7 +197,7 @@ func (aggregate *Aggregate) postStatusToApp(emailData reportTemplate) {
 	if errJ != nil {
 		log.Println("Error creating json object: ", errJ)
 	}
-	_, err := http.Post("http://"+apiAddress+"/towers", "application/json", bytes.NewBuffer(jsonReport))
+	_, err := http.Post("http://"+apiAddress+"/api/towerreport", "application/json", bytes.NewBuffer(jsonReport))
 	if err != nil {
 		log.Println("Error posting to API", err)
 	}
@@ -205,7 +205,7 @@ func (aggregate *Aggregate) postStatusToApp(emailData reportTemplate) {
 
 func (aggregate *Aggregate) towerAlertInApp(alertIP string) {
 	apiAddress := aggregate.apiIP + ":" + aggregate.apiPort
-	_, err := http.Get("http://" + apiAddress + "/alert/" + alertIP)
+	_, err := http.Get("http://" + apiAddress + "/api/alert/" + alertIP)
 	if err != nil {
 		log.Println("Error posting to API", err)
 	}
