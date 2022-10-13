@@ -35,6 +35,9 @@ GQL_PORT: "8081"
 # The IP address and port to post/get data to the API
 API_IP: ""
 API_PORT: "4100"
+# The endpoint for reports and alerts
+API_REPORT: ""
+API_ALERT: ""
 # MQTT subscription information
 MQTTBroker: ""
 MQTTTopic: ""
@@ -49,7 +52,6 @@ PING_PERIOD: "30"
 The **traps.json** file should declare the following variables, if notifications at field value limits are desired:
 ```
 [{
-  "id": "",
   "description": "",
   "operator": "",
     - Currently supported operators are <, >, and =
