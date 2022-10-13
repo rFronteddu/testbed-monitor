@@ -44,6 +44,7 @@ func ContainsTemperature(data []byte) (containsTemperature bool) {
 func Parse(data []byte) (tower string, temperature int, timestamp time.Time) {
 	var message Message
 	err := json.Unmarshal(data, &message)
+	log.Println(data) ////////////////
 	if err != nil {
 		log.Printf("Error unmarshalling json: %s\n", err)
 	}

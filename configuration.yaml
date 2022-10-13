@@ -16,8 +16,8 @@ API_PORT: "4100"
 API_REPORT: "/api/towerreport"
 API_ALERT: "/api/alert/"
 # What is the MQTT broker to subscribe to
-MQTT_BROKER: #"tcp://test.mosquitto.org:1883"
-MQTT_TOPIC: #"test"
+MQTT_BROKER: "tcp://127.0.0.1:1883"
+MQTT_TOPIC: "test"
 
 ### If the program should monitor a testbed via ping, set MONITOR_TESTBED to true
 MONITOR_TESTBED: false
