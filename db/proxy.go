@@ -91,7 +91,6 @@ func copyHostStatus(ip string, old *model.HostStatus, s *report.StatusReport) *m
 	}
 	if temperature := s.Temperature; temperature > 0 {
 		newStatus.Temperature = strconv.FormatInt(temperature, 10)
-		log.Println("New temperature logged: ", newStatus.Temperature, newStatus.ID)
 	}
 	return &newStatus
 }
