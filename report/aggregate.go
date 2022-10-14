@@ -3,7 +3,6 @@ package report
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"reflect"
@@ -231,7 +230,6 @@ func aggregator(reports map[time.Time]*StatusReport, iP string, templateData *re
 		}
 		if key.After(time.Now().Add(interval)) && element.Tower == iP {
 			if element.Timestamp.AsTime().After(compareTime) {
-				fmt.Println(element.Tower) /////////
 				templateData.Reachable = true
 				if element.Reachable == true {
 					templateData.ArduinoReached = element.ArduinoReached
@@ -256,9 +254,7 @@ func aggregator(reports map[time.Time]*StatusReport, iP string, templateData *re
 			diskCounter++
 			cpuAvg = cpuAvg + element.Cpu
 			cpuCounter++
-			fmt.Println("at temp") /////////
 			if element.Timestamp.AsTime().After(time.Now().Add(interval)) && element.Tower == iP {
-				fmt.Println(element.Temperature) ///////////
 				if element.Temperature > 0 {
 					if element.Temperature > maxTemp {
 						maxTemp = element.Temperature

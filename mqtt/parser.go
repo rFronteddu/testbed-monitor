@@ -3,8 +3,6 @@ package mqtt
 import (
 	"encoding/json"
 	"log"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -48,12 +46,7 @@ func Parse(data []byte) (tower string, temperature int, timestamp time.Time) {
 	}
 
 	tower = message.Tower
-	timeToken := strings.Split(message.Time, ":")
-	utime, errt := strconv.Atoi(timeToken[1])
-	if errt != nil {
-		log.Println(errt)
-	}
-	timestamp = time.Unix(int64(utime), 0)
+	timestamp = time.Now()
 
 	var temperatureF float64
 	for i := range message.Reading {

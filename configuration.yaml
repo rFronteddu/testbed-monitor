@@ -5,7 +5,7 @@ RECEIVE_PORT: "8758"
 # How often the system checks if it is time to send a report
 AGGREGATE_PERIOD: "1"
 # The hour the report is sent
-AGGREGATE_HOUR: "16"
+AGGREGATE_HOUR: "17"
 # How long should the receiver wait for a host report before trying to ping
 EXPECTED_REPORT_PERIOD: "1"
 # The port to access GQL playground on server
