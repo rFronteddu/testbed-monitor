@@ -102,7 +102,7 @@ func main() {
 		receiver.Start(&towers)
 
 		if conf.MQTTBroker != "" {
-			mqtt.NewSubscriber(conf.MQTTBroker, conf.MQTTTopic, statusCh)
+			mqtt.NewSubscriber(conf.MQTTBroker, conf.MQTTTopic, statusCh, &towers)
 		}
 
 		generatedConf, resolver := graph.NewResolver()

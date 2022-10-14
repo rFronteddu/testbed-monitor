@@ -13,22 +13,32 @@ type Subscriber struct {
 	mqttCh chan *report.StatusReport
 }
 
-func NewSubscriber(broker string, topic string, mqttCh chan *report.StatusReport) {
+func NewSubscriber(broker string, topic string, statusCh chan *report.StatusReport, towers *[]string) {
 	var s Subscriber
 	s.broker = broker
-	s.mqttCh = mqttCh
+	s.mqttCh = statusCh
 	options := mqtt.NewClientOptions()
 	options.AddBroker(broker)
 	options.SetClientID("Host-monitor")
 	messagePubHandler := func(client mqtt.Client, msg mqtt.Message) {
 		if ContainsTemperature(msg.Payload()) {
 			tower, temperature, timestamp := Parse(msg.Payload())
+			// Check to see if this tower is new (aggregate will look at towers[])
+			towerKnown := false
+			for i := 0; i < len(*towers); i++ {
+				if (*towers)[i] == tower {
+					towerKnown = true
+				}
+			}
+			if towerKnown == false {
+				*towers = append(*towers, tower)
+			}
 			r := &report.StatusReport{}
 			r.Tower = tower
 			r.Temperature = int64(temperature)
 			r.Timestamp = timestamppb.New(timestamp)
 			r.Reachable = true
-			mqttCh <- r
+			statusCh <- r
 		}
 	}
 	options.SetDefaultPublishHandler(messagePubHandler)
@@ -49,5 +59,4 @@ func NewSubscriber(broker string, topic string, mqttCh chan *report.StatusReport
 	if token := client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
 		log.Fatal(token.Error())
 	}
-
 }
