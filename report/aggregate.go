@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
+	"strings"
 	"testbed-monitor/traps"
 	"time"
 )
@@ -162,15 +163,15 @@ func (aggregate *Aggregate) SetTriggers(traps []traps.Config) {
 	log.Println("Thresholds:")
 	for _, field := range fields {
 		for _, t := range traps {
-			if field.Name == t.Field {
+			if strings.EqualFold(field.Name, t.Field) {
 				setTrigger := trigger{}
-				setTrigger.field = t.Field
+				setTrigger.field = field.Name
 				setTrigger.operator = t.Operator
 				setTrigger.trigger, _ = strconv.ParseInt(t.Trigger, 10, 64)
 				setTrigger.period, _ = strconv.Atoi(t.Period)
 				setTrigger.flag = false
 				aggregate.traps[field.Name] = setTrigger
-				log.Printf("%s %s %s\n", t.Field, t.Operator, t.Trigger)
+				log.Printf("%s %s %s\n", field.Name, t.Operator, t.Trigger)
 			}
 		}
 	}
