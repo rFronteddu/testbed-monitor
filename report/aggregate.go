@@ -3,6 +3,7 @@ package report
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"reflect"
@@ -222,14 +223,15 @@ func aggregator(reports map[time.Time]*StatusReport, iP string, templateData *re
 	var interval time.Duration
 	compareTime := time.Time{}
 	templateData.Tower = iP
+	fmt.Println("Getting data for IP ", iP)
 	for key, element := range reports {
-		templateData.Tower = iP
 		if reportType == "Week" {
 			interval = -7 * 24 * time.Hour
 		} else {
 			interval = -24 * time.Hour
 		}
 		if key.After(time.Now().Add(interval)) && element.Tower == iP {
+			fmt.Println("Aggregating report element.Tower == iP ", element.Tower)
 			if element.Timestamp.AsTime().After(compareTime) {
 				templateData.Reachable = true
 				if element.Reachable == true {
