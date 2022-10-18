@@ -32,9 +32,10 @@ type Configuration struct {
 	AggregateHour        string `yaml:"AGGREGATE_HOUR"`
 	ExpectedReportPeriod string `yaml:"EXPECTED_REPORT_PERIOD"`
 	GQLPort              string `yaml:"GQL_PORT"`
-	APIip                string `yaml:"API_IP"`
-	APIPort              string `yaml:"API_PORT"`
-	CriticalTemp         string `yaml:"CRITICAL_TEMP"`
+	ApiAddress           string `yaml:"API_IP"`
+	ApiPort              string `yaml:"API_PORT"`
+	ApiReportEndpoint    string `yaml:"API_REPORT"`
+	ApiAlertEndpoint     string `yaml:"API_ALERT"`
 	MonitorTestbed       bool   `yaml:"MONITOR_TESTBED"`
 	TestbedIP            string `yaml:"TESTBED_IP"`
 	PingPeriod           string `yaml:"PING_PERIOD"`
@@ -46,7 +47,7 @@ func loadConfiguration(path string) *Configuration {
 	yfile, err := ioutil.ReadFile(path)
 	if err != nil {
 		log.Printf("Could not open %s error: %s\n", path, err)
-		conf := &Configuration{true, "8758", "60", "23", "30", "8081", "", "4100", "200", false, "", "30", "", ""}
+		conf := &Configuration{true, "8758", "60", "23", "30", "8081", "", "4100", "/api/towerreport", "/api/alert/", false, "", "30", "", ""}
 		log.Printf("Host Monitor will use default configuration: %v\n", conf)
 		return conf
 	}
@@ -80,9 +81,11 @@ func main() {
 		measureCh := make(chan *measure.Measure)
 		statusCh := make(chan *report.StatusReport)
 		var towers []string
-		apiIP := conf.APIip
-		apiPort := conf.APIPort
-		log.Printf("Data will be posted to the API on port %s\n", conf.APIPort)
+		apiAddress := conf.ApiAddress
+		apiPort := conf.ApiPort
+		apiReport := conf.ApiReportEndpoint
+		apiAlert := conf.ApiAlertEndpoint
+		log.Printf("Data will be posted to the API on port %s\n", conf.ApiPort)
 		expectedReportPeriod := 30
 		if conf.ExpectedReportPeriod != "" {
 			expectedReportPeriod, err = strconv.Atoi(conf.ExpectedReportPeriod)
@@ -99,7 +102,7 @@ func main() {
 		receiver.Start(&towers)
 
 		if conf.MQTTBroker != "" {
-			mqtt.NewSubscriber(conf.MQTTBroker, conf.MQTTTopic, statusCh)
+			mqtt.NewSubscriber(conf.MQTTBroker, conf.MQTTTopic, statusCh, &towers)
 		}
 
 		generatedConf, resolver := graph.NewResolver()
@@ -124,10 +127,12 @@ func main() {
 			}
 			log.Printf("Daily report will be emailed at hour %v\n", conf.AggregateHour)
 		}
-		aggregate := report.NewAggregate(statusCh, aggregatePeriod, aggregateHour, apiIP, apiPort)
-		traps := traps.LoadConfiguration("traps.json")
-		if traps != nil {
-			aggregate.SetTriggers(traps)
+		aggregate := report.NewAggregate(statusCh, aggregatePeriod, aggregateHour, apiAddress, apiPort, apiReport, apiAlert)
+		trapConfig := traps.LoadConfiguration("traps.json") // error logged from LoadConfiguration()
+		if trapConfig != nil {
+			aggregate.SetTriggers(trapConfig)
+		} else {
+			log.Println("No traps set")
 		}
 		aggregate.Start(&towers)
 	}

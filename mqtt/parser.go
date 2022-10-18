@@ -3,34 +3,31 @@ package mqtt
 import (
 	"encoding/json"
 	"log"
-	"strconv"
-	"strings"
 	"time"
 )
 
-// Message The structs are defined from schema.json
 type Message struct {
-	Location   Location      `json:"location"`
-	Reading    []Measurement `json:"reading"`
-	SensorType string        `json:"sensorType"`
-	Time       string        `json:"time"`
-	Tower      string        `json:"tower"`
+	Location   Location  `json:"location"`
+	Reading    []Reading `json:"reading"`
+	SensorType string    `json:"sensorType"`
+	Time       string    `json:"time"`
+	Tower      string    `json:"tower"`
 }
-type Measurement struct {
-	Measurement string `json:"measurement"`
-	Name        string `json:"name"`
-	Value       string `json:"value"`
+type Reading struct {
+	Measurement string  `json:"measurement"`
+	Name        string  `json:"name"`
+	Value       float64 `json:"value"`
 }
 type Location struct {
-	Lat string `json:"lat"`
-	Lon string `json:"lon"`
+	Lat float64 `json:"lat"`
+	Lon float64 `json:"lon"`
 }
 
 func ContainsTemperature(data []byte) (containsTemperature bool) {
 	var message Message
 	err := json.Unmarshal(data, &message)
 	if err != nil {
-		log.Printf("Error unmarshalling json: %s\n", err)
+		log.Println(err)
 	}
 	containsTemperature = false
 	for i := range message.Reading {
@@ -45,27 +42,17 @@ func Parse(data []byte) (tower string, temperature int, timestamp time.Time) {
 	var message Message
 	err := json.Unmarshal(data, &message)
 	if err != nil {
-		log.Printf("Error unmarshalling json: %s\n", err)
+		log.Println(err)
 	}
 
 	tower = message.Tower
+	timestamp = time.Now()
 
-	timeToken := strings.Split(message.Time, ":")
-	utime, errt := strconv.Atoi(timeToken[1])
-	if errt != nil {
-		log.Println("Could not parse time\n", errt)
-	}
-	timestamp = time.Unix(int64(utime), 0)
-
-	var temperatureS string
+	var temperatureF float64
 	for i := range message.Reading {
 		if message.Reading[i].Name == "temperature" {
-			temperatureS = message.Reading[i].Value
+			temperatureF = message.Reading[i].Value
 		}
-	}
-	temperatureF, errF := strconv.ParseFloat(temperatureS, 64)
-	if errF != nil {
-		log.Println("Could not parse temperature\n", errF)
 	}
 	temperature = int(temperatureF)
 

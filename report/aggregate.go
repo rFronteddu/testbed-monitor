@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
+	"strings"
 	"testbed-monitor/traps"
 	"time"
 )
@@ -15,8 +16,10 @@ type Aggregate struct {
 	statusChan         chan *StatusReport
 	aggregatePeriod    int
 	aggregateHour      int
-	apiIP              string
+	apiAddress         string
 	apiPort            string
+	apiReport          string
+	apiAlert           string
 	traps              map[string]trigger
 	notificationFields map[string]string
 }
@@ -49,13 +52,15 @@ type trigger struct {
 	flag             bool
 }
 
-func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateHour int, apiIP string, apiPort string) *Aggregate {
+func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateHour int, apiAddress string, apiPort string, apiReport string, apiAlert string) *Aggregate {
 	aggregate := new(Aggregate)
 	aggregate.statusChan = statusChan
 	aggregate.aggregatePeriod = aggregatePeriod
 	aggregate.aggregateHour = aggregateHour
-	aggregate.apiIP = apiIP
+	aggregate.apiAddress = apiAddress
 	aggregate.apiPort = apiPort
+	aggregate.apiReport = apiReport
+	aggregate.apiAlert = apiAlert
 	aggregate.traps = make(map[string]trigger)
 	aggregate.notificationFields = make(map[string]string)
 	return aggregate
@@ -158,15 +163,15 @@ func (aggregate *Aggregate) SetTriggers(traps []traps.Config) {
 	log.Println("Thresholds:")
 	for _, field := range fields {
 		for _, t := range traps {
-			if field.Name == t.Field {
+			if strings.EqualFold(field.Name, t.Field) {
 				setTrigger := trigger{}
-				setTrigger.field = t.Field
+				setTrigger.field = field.Name
 				setTrigger.operator = t.Operator
 				setTrigger.trigger, _ = strconv.ParseInt(t.Trigger, 10, 64)
 				setTrigger.period, _ = strconv.Atoi(t.Period)
 				setTrigger.flag = false
 				aggregate.traps[field.Name] = setTrigger
-				log.Printf("%s %s %s\n", t.Field, t.Operator, t.Trigger)
+				log.Printf("%s %s %s\n", field.Name, t.Operator, t.Trigger)
 			}
 		}
 	}
@@ -191,7 +196,7 @@ func (aggregate *Aggregate) markFlag(fieldName string, value bool) {
 }
 
 func (aggregate *Aggregate) postStatusToApp(emailData reportTemplate) {
-	apiAddress := aggregate.apiIP + ":" + aggregate.apiPort
+	apiAddress := aggregate.apiAddress + ":" + aggregate.apiPort
 	jsonReport, errJ := json.Marshal(emailData.Report)
 	log.Println(string(jsonReport))
 	if errJ != nil {
@@ -204,7 +209,7 @@ func (aggregate *Aggregate) postStatusToApp(emailData reportTemplate) {
 }
 
 func (aggregate *Aggregate) towerAlertInApp(alertIP string) {
-	apiAddress := aggregate.apiIP + ":" + aggregate.apiPort
+	apiAddress := aggregate.apiAddress + ":" + aggregate.apiPort
 	_, err := http.Get("http://" + apiAddress + "/api/alert/" + alertIP)
 	if err != nil {
 		log.Println("Error posting to API", err)

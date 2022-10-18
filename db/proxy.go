@@ -22,21 +22,14 @@ func NewProxy(resolver *graph.Resolver, statusCh chan *report.StatusReport) (*Pr
 
 func (proxy *Proxy) Start() {
 	go func() {
-		//timer := time.NewTimer(time.Minute)
 		for {
 			select {
 			case s := <-proxy.statusCh:
 				proxy.processReport(s)
-				//case <-timer.C:
-				//	timer = time.NewTimer(time.Minute)
-				//	hosts, _ := proxy.resolver.GetHosts()
-				//	proxy.processState(hosts)
 			}
 		}
 	}()
 }
-
-//func (proxy *Proxy) processState(hosts []*model.HostStatus) {}
 
 func (proxy *Proxy) processReport(s *report.StatusReport) {
 	ip := s.Tower
