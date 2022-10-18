@@ -109,7 +109,6 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers *
 			continue
 		}
 
-		log.Printf("Received report from %s.\nReport: %s\n", addr, m.String())
 		receivedReports[addr.IP.String()] = time.Now()
 
 		// Check to see if this tower is new (aggregate will look at towers[])
@@ -133,6 +132,8 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers *
 			GetStatusFromMeasure(addr.IP.String(), &m, s)
 			receiver.statusCh <- s
 		}
+
+		log.Printf("Received report from %s.\nReport: %s\n", addr, m.String())
 	}
 }
 
