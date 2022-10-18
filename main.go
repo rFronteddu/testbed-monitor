@@ -79,7 +79,7 @@ func main() {
 	conf := loadConfiguration("configuration.yaml")
 	if conf.MonitorHosts {
 		measureCh := make(chan *measure.Measure)
-		statusCh := make(chan *report.StatusReport)
+		statusCh := make(chan *report.StatusReport, 1000)
 		var towers []string
 		apiAddress := conf.ApiAddress
 		apiPort := conf.ApiPort

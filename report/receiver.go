@@ -133,7 +133,7 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers *
 			receiver.statusCh <- s
 		}
 
-		log.Printf("Received report from %s.\nReport: %s\n", addr, m.String())
+		log.Printf("Received report from %s.\nReport: %s\n", addr.IP.String(), m.String())
 	}
 }
 
