@@ -231,7 +231,8 @@ func aggregator(reports map[time.Time]*StatusReport, iP string, templateData *re
 			interval = -24 * time.Hour
 		}
 		if key.After(time.Now().Add(interval)) && element.Tower == iP {
-			fmt.Println("Aggregating report element.Tower == iP ", element.Tower)
+			fmt.Println("key ", key, "  interval ", interval, "key.After()", key.After(time.Now().Add(interval)))
+			fmt.Println("element.Tower ", element.Tower, "  iP ", iP)
 			if element.Timestamp.AsTime().After(compareTime) {
 				templateData.Reachable = true
 				if element.Reachable == true {
