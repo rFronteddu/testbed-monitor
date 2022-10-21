@@ -17,13 +17,15 @@ type Receiver struct {
 	connection           *net.UDPConn
 	measureCh            chan *measure.Measure
 	statusCh             chan *StatusReport
+	gqlCh                chan *StatusReport
 	expectedReportPeriod int
 }
 
-func NewReportReceiver(measureCh chan *measure.Measure, statusCh chan *StatusReport, receivePort string, expectedReportPeriod int) (*Receiver, error) {
+func NewReportReceiver(measureCh chan *measure.Measure, statusCh chan *StatusReport, gqlCh chan *StatusReport, receivePort string, expectedReportPeriod int) (*Receiver, error) {
 	receiver := new(Receiver)
 	receiver.measureCh = measureCh
 	receiver.statusCh = statusCh
+	receiver.gqlCh = gqlCh
 	s, err := net.ResolveUDPAddr("udp4", ":"+receivePort)
 	if err != nil {
 		log.Panicf("Unable to resolve address %s\n%s\n", s, err)
@@ -131,6 +133,7 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers *
 			s := &StatusReport{}
 			GetStatusFromMeasure(addr.IP.String(), &m, s)
 			receiver.statusCh <- s
+			receiver.gqlCh <- s
 		}
 
 		log.Printf("Received report from %s.\nReport: %s\n", addr.IP.String(), m.String())

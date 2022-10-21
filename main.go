@@ -64,6 +64,8 @@ func loadConfiguration(path string) *Configuration {
 }
 
 func main() {
+	version := "10-21-2022"
+	fmt.Println("Running software version ", version)
 	file, err := os.OpenFile("./log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		log.Fatalf("Unable to create log file\n%s", err)
@@ -80,6 +82,7 @@ func main() {
 	if conf.MonitorHosts {
 		measureCh := make(chan *measure.Measure)
 		statusCh := make(chan *report.StatusReport, 1000)
+		gqlCh := make(chan *report.StatusReport, 1000)
 		var towers []string
 		apiAddress := conf.ApiAddress
 		apiPort := conf.ApiPort
@@ -94,7 +97,7 @@ func main() {
 			}
 			log.Printf("Host will be pinged if no report in %v minutes\n", conf.ExpectedReportPeriod)
 		}
-		receiver, err := report.NewReportReceiver(measureCh, statusCh, conf.ReceivePort, expectedReportPeriod)
+		receiver, err := report.NewReportReceiver(measureCh, statusCh, gqlCh, conf.ReceivePort, expectedReportPeriod)
 		if err != nil {
 			log.Fatalf("Fatal error %s while creating the report.Receiver, aborting...\n", err)
 		}
@@ -102,7 +105,7 @@ func main() {
 		receiver.Start(&towers)
 
 		if conf.MQTTBroker != "" {
-			mqtt.NewSubscriber(conf.MQTTBroker, conf.MQTTTopic, statusCh, &towers)
+			mqtt.NewSubscriber(conf.MQTTBroker, conf.MQTTTopic, statusCh, gqlCh, &towers)
 		}
 
 		generatedConf, resolver := graph.NewResolver()

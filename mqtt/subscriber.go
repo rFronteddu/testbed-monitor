@@ -8,15 +8,17 @@ import (
 )
 
 type Subscriber struct {
-	broker string
-	Client mqtt.Client
-	mqttCh chan *report.StatusReport
+	broker   string
+	Client   mqtt.Client
+	statusCh chan *report.StatusReport
+	gqlCh    chan *report.StatusReport
 }
 
-func NewSubscriber(broker string, topic string, statusCh chan *report.StatusReport, towers *[]string) {
+func NewSubscriber(broker string, topic string, statusCh chan *report.StatusReport, gqlCh chan *report.StatusReport, towers *[]string) {
 	var s Subscriber
 	s.broker = broker
-	s.mqttCh = statusCh
+	s.statusCh = statusCh
+	s.gqlCh = gqlCh
 	options := mqtt.NewClientOptions()
 	options.AddBroker(broker)
 	options.SetClientID("Host-monitor")
@@ -39,6 +41,7 @@ func NewSubscriber(broker string, topic string, statusCh chan *report.StatusRepo
 			r.Timestamp = timestamppb.New(timestamp)
 			r.Reachable = true
 			statusCh <- r
+			gqlCh <- r
 		}
 	}
 	options.SetDefaultPublishHandler(messagePubHandler)

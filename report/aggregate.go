@@ -3,7 +3,6 @@ package report
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"reflect"
@@ -86,7 +85,7 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 			case <-dailyTicker.C:
 				if time.Now().Hour() == aggregate.aggregateHour {
 					emailData.Report = nil
-					emailData.ReportType = "hello"
+					emailData.ReportType = "24 Hour"
 					unreachableFlag = false
 					if time.Now().Weekday().String() == "Sunday" { // Weekly report on Sundays
 						emailData.ReportType = "Weekly"
@@ -95,7 +94,6 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 							emailData.Report = append(emailData.Report, aggregatedReport)
 						}
 					} else { // Daily report
-						emailData.ReportType = "24 Hour"
 						for i = 0; i < len(*iPs); i++ {
 							aggregator(reportAggregate, (*iPs)[i], &aggregatedReport, "Day")
 							emailData.Report = append(emailData.Report, aggregatedReport)
@@ -223,16 +221,13 @@ func aggregator(reports map[time.Time]*StatusReport, iP string, templateData *re
 	var interval time.Duration
 	compareTime := time.Time{}
 	templateData.Tower = iP
-	fmt.Println("Getting data for IP ", iP)
+	if reportType == "Week" {
+		interval = -7 * 24 * time.Hour
+	} else {
+		interval = -24 * time.Hour
+	}
 	for key, element := range reports {
-		if reportType == "Week" {
-			interval = -7 * 24 * time.Hour
-		} else {
-			interval = -24 * time.Hour
-		}
 		if key.After(time.Now().Add(interval)) && element.Tower == iP {
-			fmt.Println("key ", key, "  interval ", interval, "key.After()", key.After(time.Now().Add(interval)))
-			fmt.Println("element.Tower ", element.Tower, "  iP ", iP)
 			if element.Timestamp.AsTime().After(compareTime) {
 				templateData.Reachable = true
 				if element.Reachable == true {
