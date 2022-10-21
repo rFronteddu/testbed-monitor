@@ -109,7 +109,7 @@ func main() {
 		}
 
 		generatedConf, resolver := graph.NewResolver()
-		proxy, _ := db.NewProxy(resolver, statusCh)
+		proxy, _ := db.NewProxy(resolver, gqlCh)
 		proxy.Start()
 		gqlPort := conf.GQLPort
 		go gqlServer(":"+gqlPort, generatedConf)
