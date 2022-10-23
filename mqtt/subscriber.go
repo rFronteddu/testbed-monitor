@@ -14,7 +14,7 @@ type Subscriber struct {
 	gqlCh    chan *report.StatusReport
 }
 
-func NewSubscriber(broker string, topic string, statusCh chan *report.StatusReport, gqlCh chan *report.StatusReport, m *map[string]string, towers *[]string) {
+func NewSubscriber(broker string, topic string, statusCh chan *report.StatusReport, gqlCh chan *report.StatusReport, m map[string]string, towers *[]string) {
 	var s Subscriber
 	s.broker = broker
 	s.statusCh = statusCh
@@ -24,7 +24,7 @@ func NewSubscriber(broker string, topic string, statusCh chan *report.StatusRepo
 	options.SetClientID("Host-monitor")
 	messagePubHandler := func(client mqtt.Client, msg mqtt.Message) {
 		if ContainsTemperature(msg.Payload()) {
-			tower, temperature, timestamp := Parse(msg.Payload())
+			tower, temperature, timestamp := Parse(msg.Payload(), m)
 			// Check to see if this tower is new (aggregate will look at towers[])
 			towerKnown := false
 			for i := 0; i < len(*towers); i++ {

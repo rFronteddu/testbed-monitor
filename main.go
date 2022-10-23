@@ -157,7 +157,7 @@ func main() {
 			if err != nil {
 				log.Panic("Unable to unmarshal tower names file: ", tfile, "\nError: ", err)
 			}
-			mqtt.NewSubscriber(conf.MQTTBroker, conf.MQTTTopic, statusCh, gqlCh, &m, &towers)
+			mqtt.NewSubscriber(conf.MQTTBroker, conf.MQTTTopic, statusCh, gqlCh, m, &towers)
 		}
 
 		generatedConf, resolver := graph.NewResolver()
