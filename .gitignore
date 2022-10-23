@@ -33,3 +33,5 @@ go.work
 testbed-monitor
 main
 log
+
+tower_#.yaml
