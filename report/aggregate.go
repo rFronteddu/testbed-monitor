@@ -197,7 +197,6 @@ func (aggregate *Aggregate) markFlag(fieldName string, value bool) {
 func (aggregate *Aggregate) postStatusToApp(emailData reportTemplate) {
 	apiAddress := aggregate.apiAddress + ":" + aggregate.apiPort
 	jsonReport, errJ := json.Marshal(emailData.Report)
-	log.Println(string(jsonReport))
 	if errJ != nil {
 		log.Println("Error creating json object: ", errJ)
 	}
