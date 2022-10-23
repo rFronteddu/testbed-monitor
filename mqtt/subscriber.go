@@ -14,7 +14,7 @@ type Subscriber struct {
 	gqlCh    chan *report.StatusReport
 }
 
-func NewSubscriber(broker string, topic string, statusCh chan *report.StatusReport, gqlCh chan *report.StatusReport, towers *[]string) {
+func NewSubscriber(broker string, topic string, statusCh chan *report.StatusReport, gqlCh chan *report.StatusReport, m *map[string]string, towers *[]string) {
 	var s Subscriber
 	s.broker = broker
 	s.statusCh = statusCh
