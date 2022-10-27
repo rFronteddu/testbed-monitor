@@ -63,6 +63,49 @@ func loadConfiguration(path string) *Configuration {
 	return &conf
 }
 
+type TowerNames struct {
+	Names map[string]string `yaml:"tower_names,omitempty"`
+}
+
+// UnmarshalYAML is used to unmarshal into map[string]string
+func (t *TowerNames) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return unmarshal(&t.Names)
+}
+
+type ListOfTowers struct {
+	tower1  string `yaml:"tower_1"`
+	tower2  string `yaml:"tower_2"`
+	tower3  string `yaml:"tower_3"`
+	tower4  string `yaml:"tower_4"`
+	tower5  string `yaml:"tower_5"`
+	tower6  string `yaml:"tower_6"`
+	tower7  string `yaml:"tower_7"`
+	tower8  string `yaml:"tower_8"`
+	tower9  string `yaml:"tower_9"`
+	tower10 string `yaml:"tower_10"`
+	tower11 string `yaml:"tower_11"`
+	tower12 string `yaml:"tower_12"`
+}
+
+func loadListOfTowers(path string) *ListOfTowers {
+	yfile, err := ioutil.ReadFile(path)
+	if err != nil {
+		log.Printf("Could not open %s error: %s\n", path, err)
+		conf := ListOfTowers{}
+		return &conf
+	}
+	if yfile == nil {
+		panic("There was no error but YFile was null")
+	}
+	conf := ListOfTowers{}
+	err2 := yaml.Unmarshal(yfile, &conf)
+	if err2 != nil {
+		log.Fatalf("Configuration file could not be parsed, error: %s\n", err2)
+	}
+	log.Printf("Found configuration: %v\n", conf)
+	return &conf
+}
+
 func main() {
 	version := "10-21-2022"
 	fmt.Println("Running software version ", version)
@@ -105,7 +148,16 @@ func main() {
 		receiver.Start(&towers)
 
 		if conf.MQTTBroker != "" {
-			mqtt.NewSubscriber(conf.MQTTBroker, conf.MQTTTopic, statusCh, gqlCh, &towers)
+			m := make(map[string]string)
+			tfile, err := ioutil.ReadFile("tower_#.yaml")
+			if err != nil {
+				log.Panic("Unable to open and read tower names file: ", tfile, "\nError: ", err)
+			}
+			err = yaml.Unmarshal(tfile, m)
+			if err != nil {
+				log.Panic("Unable to unmarshal tower names file: ", tfile, "\nError: ", err)
+			}
+			mqtt.NewSubscriber(conf.MQTTBroker, conf.MQTTTopic, statusCh, gqlCh, m, &towers)
 		}
 
 		generatedConf, resolver := graph.NewResolver()

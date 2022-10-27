@@ -13,15 +13,14 @@ import (
 )
 
 type Aggregate struct {
-	statusChan         chan *StatusReport
-	aggregatePeriod    int
-	aggregateHour      int
-	apiAddress         string
-	apiPort            string
-	apiReport          string
-	apiAlert           string
-	traps              map[string]trigger
-	notificationFields map[string]string
+	statusChan      chan *StatusReport
+	aggregatePeriod int
+	aggregateHour   int
+	apiAddress      string
+	apiPort         string
+	apiReport       string
+	apiAlert        string
+	traps           map[string]trigger
 }
 
 type reportData struct {
@@ -62,7 +61,6 @@ func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateH
 	aggregate.apiReport = apiReport
 	aggregate.apiAlert = apiAlert
 	aggregate.traps = make(map[string]trigger)
-	aggregate.notificationFields = make(map[string]string)
 	return aggregate
 }
 
@@ -102,7 +100,7 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 					emailData.Timestamp = time.Now().Format("Jan 02 2006 15:04:05")
 					subject = emailData.ReportType + " Testbed Status Report " + emailData.Timestamp
 					if unreachableFlag {
-						subject += ": 1 or more towers is down!"
+						subject += ": 1 or more host monitors are down!"
 					}
 					MailReport(subject, emailData)
 					aggregate.postStatusToApp(emailData)
@@ -117,7 +115,6 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 					for _, reportField := range fields {
 						if aggregate.traps[trapField].field == reportField.Name {
 							fieldValue := getReportValue(msg, reportField.Name)
-							fieldName := aggregate.notificationFields[reportField.Name]
 							if aggregate.traps[trapField].flag == false {
 								switch aggregate.traps[trapField].operator {
 								case ">":
@@ -136,8 +133,8 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 								if notificationFlag == true {
 									if !aggregate.traps[trapField].flag {
 										var notificationData NotificationTemplate
-										notificationData = setNotification(msg.Tower, fieldName, strconv.FormatInt(fieldValue, 10))
-										subject = msg.Tower + " " + fieldName + " Notification"
+										notificationData = setNotification(msg.Tower, trapField, strconv.FormatInt(fieldValue, 10))
+										subject = msg.Tower + " " + trapField + " " + aggregate.traps[trapField].operator + " " + strconv.FormatInt(aggregate.traps[trapField].trigger, 10)
 										MailNotification(subject, notificationData)
 										aggregate.markFlag(trapField, true)
 									}
@@ -174,11 +171,6 @@ func (aggregate *Aggregate) SetTriggers(traps []traps.Config) {
 			}
 		}
 	}
-	aggregate.notificationFields["reboots"] = "Daily reboot count"
-	aggregate.notificationFields["usedRAM"] = "MB RAM used"
-	aggregate.notificationFields["usedDisk"] = "GB Disk used"
-	aggregate.notificationFields["cpu"] = "CPU %"
-	aggregate.notificationFields["temperature"] = "Temperature"
 }
 
 func (aggregate *Aggregate) markFlag(fieldName string, value bool) {
@@ -197,7 +189,6 @@ func (aggregate *Aggregate) markFlag(fieldName string, value bool) {
 func (aggregate *Aggregate) postStatusToApp(emailData reportTemplate) {
 	apiAddress := aggregate.apiAddress + ":" + aggregate.apiPort
 	jsonReport, errJ := json.Marshal(emailData.Report)
-	log.Println(string(jsonReport))
 	if errJ != nil {
 		log.Println("Error creating json object: ", errJ)
 	}
@@ -216,7 +207,7 @@ func (aggregate *Aggregate) towerAlertInApp(alertIP string) {
 }
 
 func aggregator(reports map[time.Time]*StatusReport, iP string, templateData *reportData, reportType string) {
-	var usedRAMAvg, ramCounter, usedDiskAvg, diskCounter, cpuAvg, cpuCounter, rebootCounter int64 = 0, 0, 0, 0, 0, 0, 0
+	var usedRAMAvg, ramCounter, usedDiskAvg, diskCounter, cpuAvg, cpuCounter int64 = 0, 0, 0, 0, 0, 0
 	var totalRAM, totalDisk, maxTemp int64 = 0, 0, 0
 	var interval time.Duration
 	compareTime := time.Time{}
@@ -234,6 +225,7 @@ func aggregator(reports map[time.Time]*StatusReport, iP string, templateData *re
 					templateData.ArduinoReached = element.ArduinoReached
 					templateData.TowerReached = element.TowerReached
 					templateData.BootTime = element.BootTime
+					templateData.Reboots = strconv.FormatInt(element.Reboots, 10)
 				}
 				if totalRAM == 0 {
 					totalRAM = element.TotalRAM
@@ -246,7 +238,6 @@ func aggregator(reports map[time.Time]*StatusReport, iP string, templateData *re
 				}
 				compareTime = element.Timestamp.AsTime()
 			}
-			rebootCounter = rebootCounter + element.Reboots
 			usedRAMAvg = usedRAMAvg + element.UsedRAM
 			ramCounter++
 			usedDiskAvg = usedDiskAvg + element.UsedDisk
@@ -275,7 +266,6 @@ func aggregator(reports map[time.Time]*StatusReport, iP string, templateData *re
 		cpuAvg = cpuAvg / cpuCounter
 	}
 	templateData.Cpu = strconv.FormatInt(cpuAvg, 10) + "%"
-	templateData.Reboots = strconv.FormatInt(rebootCounter, 10)
 	if templateData.Reachable == false {
 		unreachableFlag = true
 	}

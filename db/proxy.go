@@ -1,7 +1,6 @@
 package db
 
 import (
-	"log"
 	"strconv"
 	"testbed-monitor/graph"
 	"testbed-monitor/graph/model"
@@ -39,7 +38,6 @@ func (proxy *Proxy) processReport(s *report.StatusReport) {
 		proxy.resolver.CommitHost(status)
 	} else {
 		x := raw.(*model.HostStatus)
-		log.Printf("Got raw: %v\n", x)
 		proxy.resolver.CommitHost(copyHostStatus(ip, x, s))
 	}
 }

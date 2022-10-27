@@ -38,14 +38,16 @@ func ContainsTemperature(data []byte) (containsTemperature bool) {
 	return containsTemperature
 }
 
-func Parse(data []byte) (tower string, temperature int, timestamp time.Time) {
+func Parse(data []byte, m map[string]string) (tower string, temperature int, timestamp time.Time) {
 	var message Message
 	err := json.Unmarshal(data, &message)
 	if err != nil {
 		log.Println(err)
 	}
 
-	tower = message.Tower
+	towerName := message.Tower
+	tower = m[towerName]
+
 	timestamp = time.Now()
 
 	var temperatureF float64
