@@ -207,7 +207,7 @@ func (aggregate *Aggregate) towerAlertInApp(alertIP string) {
 }
 
 func aggregator(reports map[time.Time]*StatusReport, iP string, templateData *reportData, reportType string) {
-	var usedRAMAvg, ramCounter, usedDiskAvg, diskCounter, cpuAvg, cpuCounter int64 = 0, 0, 0, 0, 0, 0
+	var usedRAMAvg, ramCounter, usedDiskAvg, diskCounter, cpuAvg, cpuCounter, reboots int64 = 0, 0, 0, 0, 0, 0, 0
 	var totalRAM, totalDisk, maxTemp int64 = 0, 0, 0
 	var interval time.Duration
 	compareTime := time.Time{}
@@ -225,7 +225,6 @@ func aggregator(reports map[time.Time]*StatusReport, iP string, templateData *re
 					templateData.ArduinoReached = element.ArduinoReached
 					templateData.TowerReached = element.TowerReached
 					templateData.BootTime = element.BootTime
-					templateData.Reboots = strconv.FormatInt(element.Reboots, 10)
 				}
 				if totalRAM == 0 {
 					totalRAM = element.TotalRAM
@@ -235,6 +234,9 @@ func aggregator(reports map[time.Time]*StatusReport, iP string, templateData *re
 				}
 				if !element.Reachable {
 					templateData.Reachable = false
+				}
+				if element.Reboots > 0 {
+					reboots++
 				}
 				compareTime = element.Timestamp.AsTime()
 			}
@@ -269,6 +271,7 @@ func aggregator(reports map[time.Time]*StatusReport, iP string, templateData *re
 	if templateData.Reachable == false {
 		unreachableFlag = true
 	}
+	templateData.Reboots = strconv.FormatInt(reboots, 10)
 	templateData.Temperature = strconv.FormatInt(maxTemp, 10)
 }
 
