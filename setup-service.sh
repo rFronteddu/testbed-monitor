@@ -11,8 +11,8 @@ sudo cp testbed-monitor.service /usr/lib/monitor/testbed-monitor.service
 sudo cp configuration.yaml /usr/lib/monitor/configuration.yaml
 sudo cp .env /usr/lib/monitor/.env
 sudo cp traps.json /usr/lib/monitor/traps.json
-sudo cp template.html /usr/lib/monitor/report_template.html
-sudo cp template.html /usr/lib/monitor/notification_template.html
+sudo cp report_template.html /usr/lib/monitor/report_template.html
+sudo cp notification_template.html /usr/lib/monitor/notification_template.html
 sudo cp main /usr/lib/monitor/main
 
 # copy the service to the
