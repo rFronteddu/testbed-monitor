@@ -105,11 +105,11 @@ func main() {
 		receiver.Start(&towers)
 
 		if conf.MQTTBroker != "" {
+			t := make(map[interface{}]interface{})
 			tfile, err := ioutil.ReadFile("endpoint_mapping.yaml")
 			if err != nil {
 				log.Panic("Unable to open and read tower names file: ", tfile, "\nError: ", err)
 			}
-			t := make(map[interface{}]interface{})
 			err = yaml.Unmarshal(tfile, t)
 			if err != nil {
 				log.Panic("Unable to unmarshal tower names file: ", tfile, "\nError: ", err)
