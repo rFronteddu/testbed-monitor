@@ -139,7 +139,7 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 										notificationData = setNotification(msg.Tower, trapField, strconv.FormatInt(fieldValue, 10))
 										subject = msg.Tower + " " + trapField + " " + aggregate.traps[trapField].operator + " " + strconv.FormatInt(aggregate.traps[trapField].trigger, 10)
 										MailNotification(subject, notificationData)
-										aggregate.traps[trapField].flag[msg.Tower] = false
+										aggregate.traps[trapField].flag[msg.Tower] = true
 									}
 								}
 							}
