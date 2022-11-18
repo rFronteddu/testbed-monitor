@@ -48,7 +48,7 @@ type trigger struct {
 	trigger          int64
 	period           int
 	lastNotification time.Time
-	flag             bool
+	flag             map[string]bool
 }
 
 func NewAggregate(statusChan chan *StatusReport, aggregatePeriod int, aggregateHour int, apiAddress string, apiPort string, apiReport string, apiAlert string) *Aggregate {
@@ -113,9 +113,12 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 				notificationFlag = false
 				for trapField := range aggregate.traps {
 					for _, reportField := range fields {
-						if aggregate.traps[trapField].field == reportField.Name {
-							fieldValue := getReportValue(msg, reportField.Name)
-							if aggregate.traps[trapField].flag == false {
+						if strings.EqualFold(aggregate.traps[trapField].field, reportField.Name) {
+							fieldValue := getReportValue(msg, aggregate.traps[trapField].field)
+							if _, ok := aggregate.traps[trapField].flag[msg.Tower]; !ok {
+								aggregate.traps[trapField].flag[msg.Tower] = false
+							}
+							if aggregate.traps[trapField].flag[msg.Tower] == false {
 								switch aggregate.traps[trapField].operator {
 								case ">":
 									if checkGreater(fieldValue, aggregate.traps[trapField].trigger) {
@@ -131,22 +134,25 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 									}
 								}
 								if notificationFlag == true {
-									if !aggregate.traps[trapField].flag {
+									if !aggregate.traps[trapField].flag[msg.Tower] {
 										var notificationData NotificationTemplate
 										notificationData = setNotification(msg.Tower, trapField, strconv.FormatInt(fieldValue, 10))
 										subject = msg.Tower + " " + trapField + " " + aggregate.traps[trapField].operator + " " + strconv.FormatInt(aggregate.traps[trapField].trigger, 10)
 										MailNotification(subject, notificationData)
-										aggregate.markFlag(trapField, true)
+										aggregate.traps[trapField].flag[msg.Tower] = true
 									}
 								}
 							}
 						}
 					}
 				}
+
 			case <-periodTicker.C:
 				for trap := range aggregate.traps {
 					if time.Now().After((aggregate.traps[trap].lastNotification).Add(time.Duration(aggregate.traps[trap].period) * time.Hour)) {
-						aggregate.markFlag(trap, false)
+						for i = 0; i < len(*iPs); i++ {
+							aggregate.markFlag(trap, (*iPs)[i], false)
+						}
 					}
 				}
 			}
@@ -155,32 +161,34 @@ func (aggregate *Aggregate) Start(iPs *[]string) {
 }
 
 func (aggregate *Aggregate) SetTriggers(traps []traps.Config) {
-	fields := reflect.VisibleFields(reflect.TypeOf(struct{ reportData }{}))
+	reportDataFields := reflect.VisibleFields(reflect.TypeOf(struct{ reportData }{}))
 	log.Println("Thresholds:")
-	for _, field := range fields {
+	for _, field := range reportDataFields {
 		for _, t := range traps {
 			if strings.EqualFold(field.Name, t.Field) {
 				setTrigger := trigger{}
-				setTrigger.field = field.Name
+				structField, _ := reflect.ValueOf(reportData{}).Type().FieldByName(field.Name)
+				jsonName := structField.Tag.Get("json")
+				setTrigger.field = jsonName
 				setTrigger.operator = t.Operator
 				setTrigger.trigger, _ = strconv.ParseInt(t.Trigger, 10, 64)
 				setTrigger.period, _ = strconv.Atoi(t.Period)
-				setTrigger.flag = false
+				setTrigger.flag = make(map[string]bool)
 				aggregate.traps[field.Name] = setTrigger
-				log.Printf("%s %s %s\n", field.Name, t.Operator, t.Trigger)
+				log.Printf("%s %s %s\n", setTrigger.field, setTrigger.operator, setTrigger.trigger)
 			}
 		}
 	}
 }
 
-func (aggregate *Aggregate) markFlag(fieldName string, value bool) {
+func (aggregate *Aggregate) markFlag(fieldName string, ip string, value bool) {
 	for _, t := range aggregate.traps {
 		reset := trigger{}
 		reset.field = t.field
 		reset.operator = t.operator
 		reset.trigger = t.trigger
 		reset.period = t.period
-		reset.flag = value
+		reset.flag[ip] = value
 		reset.lastNotification = time.Now()
 		aggregate.traps[fieldName] = reset
 	}
@@ -207,7 +215,7 @@ func (aggregate *Aggregate) towerAlertInApp(alertIP string) {
 }
 
 func aggregator(reports map[time.Time]*StatusReport, iP string, templateData *reportData, reportType string) {
-	var usedRAMAvg, ramCounter, usedDiskAvg, diskCounter, cpuAvg, cpuCounter int64 = 0, 0, 0, 0, 0, 0
+	var usedRAMAvg, ramCounter, usedDiskAvg, diskCounter, cpuAvg, cpuCounter, reboots int64 = 0, 0, 0, 0, 0, 0, 0
 	var totalRAM, totalDisk, maxTemp int64 = 0, 0, 0
 	var interval time.Duration
 	compareTime := time.Time{}
@@ -225,7 +233,6 @@ func aggregator(reports map[time.Time]*StatusReport, iP string, templateData *re
 					templateData.ArduinoReached = element.ArduinoReached
 					templateData.TowerReached = element.TowerReached
 					templateData.BootTime = element.BootTime
-					templateData.Reboots = strconv.FormatInt(element.Reboots, 10)
 				}
 				if totalRAM == 0 {
 					totalRAM = element.TotalRAM
@@ -235,6 +242,9 @@ func aggregator(reports map[time.Time]*StatusReport, iP string, templateData *re
 				}
 				if !element.Reachable {
 					templateData.Reachable = false
+				}
+				if element.Reboots > 0 {
+					reboots++
 				}
 				compareTime = element.Timestamp.AsTime()
 			}
@@ -269,6 +279,7 @@ func aggregator(reports map[time.Time]*StatusReport, iP string, templateData *re
 	if templateData.Reachable == false {
 		unreachableFlag = true
 	}
+	templateData.Reboots = strconv.FormatInt(reboots, 10)
 	templateData.Temperature = strconv.FormatInt(maxTemp, 10)
 }
 

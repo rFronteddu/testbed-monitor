@@ -1,7 +1,14 @@
 [{
   "description": "test",
   "operator": ">",
-  "field": "Cpu",
+  "field": "cpu",
   "trigger": "1",
   "period": "12"
-}]
+},
+  {
+    "description": "test",
+    "operator": ">",
+    "field": "usedram",
+    "trigger": "1",
+    "period": "12"
+  }]
