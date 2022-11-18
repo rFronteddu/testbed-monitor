@@ -145,7 +145,7 @@ func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport) {
 	s.Tower = ip
 	s.ArduinoReached = time.Now().Add(time.Duration(m.Integers["arduinoReached"])).Format(time.RFC822)
 	s.TowerReached = time.Now().Format(time.RFC822)
-	s.BootTime = time.Now().Add(time.Duration(m.Integers["bootTime"] * -1)).Format(time.RFC822)
+	s.BootTime = time.Unix(m.Integers["bootTime"], 0).Format(time.RFC822)
 	s.Reboots = m.Integers["reboot_sensor"]
 	s.UsedRAM = m.Integers["vm_used"]
 	s.TotalRAM = m.Integers["vm_total"]
