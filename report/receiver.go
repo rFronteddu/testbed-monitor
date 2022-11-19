@@ -1,6 +1,7 @@
 package report
 
 import (
+	"fmt"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/protobuf/proto"
 	"log"
@@ -147,6 +148,7 @@ func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport) {
 	s.TowerReached = time.Now().Format(time.RFC822)
 	if m.Integers["bootTime"] > 0 {
 		s.BootTime = time.Unix(m.Integers["bootTime"], 0).Format(time.RFC822)
+		fmt.Printf("Received boot time: %v\nConverted to: %v\n", m.Integers["bootTime"], s.BootTime)
 	}
 	s.Reboots = m.Integers["reboot_sensor"]
 	s.UsedRAM = m.Integers["vm_used"]
