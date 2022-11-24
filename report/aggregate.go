@@ -175,7 +175,7 @@ func (aggregate *Aggregate) SetTriggers(traps []traps.Config) {
 				setTrigger.period, _ = strconv.Atoi(t.Period)
 				setTrigger.flag = make(map[string]bool)
 				aggregate.traps[field.Name] = setTrigger
-				log.Printf("%s %s %s\n", setTrigger.field, setTrigger.operator, setTrigger.trigger)
+				log.Printf("%s %s %v\n", setTrigger.field, setTrigger.operator, setTrigger.trigger)
 			}
 		}
 	}

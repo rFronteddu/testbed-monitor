@@ -7,7 +7,7 @@ AGGREGATE_PERIOD: "1"
 # The hour the report is sent
 AGGREGATE_HOUR: "7"
 # How long should the receiver wait for a host report before trying to ping
-EXPECTED_REPORT_PERIOD: "10"
+EXPECTED_REPORT_PERIOD: "1"
 # The port to access GQL playground on server
 GQL_PORT: "8081"
 # The address and port of the custom API

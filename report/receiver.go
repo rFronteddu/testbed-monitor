@@ -1,7 +1,6 @@
 package report
 
 import (
-	"fmt"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/protobuf/proto"
 	"log"
@@ -47,7 +46,6 @@ func (receiver *Receiver) Start(towers *[]string) {
 	replyCh := make(chan *pb.PingReply)
 	var p *pb.PingReply
 	receivedReports := map[string]time.Time{}
-
 	// Go func to receive reports
 	go func() {
 		receiver.receive(receivedReports, towers)
@@ -150,14 +148,13 @@ func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport, uptime
 	s.Tower = ip
 	s.ArduinoReached = time.Now().Add(time.Duration(m.Integers["arduinoReached"]) * time.Second).Format(time.RFC822)
 	s.TowerReached = time.Now().Format(time.RFC822)
-
-	s.BootTime = time.Now().Add(time.Duration(m.Integers["uptime"]) * -1 * time.Second).Format(time.RFC822)
-	fmt.Println("boot time ", s.BootTime) //////////////
+	if m.Integers["uptime"] > 0 {
+		s.BootTime = time.Now().Add(time.Duration(m.Integers["uptime"]) * -1 * time.Second).Format(time.RFC822)
+	}
 	if m.Integers["uptime"] < (*uptimeMap)[ip] {
 		s.Reboots = 1
 	}
 	(*uptimeMap)[ip] = m.Integers["uptime"]
-	fmt.Println(m.Integers["uptime"]) ///////////////
 	s.UsedRAM = m.Integers["vmUsed"]
 	s.TotalRAM = m.Integers["vmTotal"]
 	s.UsedDisk = m.Integers["diskUsed"]
