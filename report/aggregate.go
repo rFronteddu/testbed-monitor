@@ -232,6 +232,8 @@ func aggregator(reports map[time.Time]*StatusReport, iP string, templateData *re
 				if element.Reachable == true {
 					templateData.ArduinoReached = element.ArduinoReached
 					templateData.TowerReached = element.TowerReached
+				}
+				if element.BootTime != "" {
 					templateData.BootTime = element.BootTime
 				}
 				if totalRAM == 0 {
@@ -243,10 +245,10 @@ func aggregator(reports map[time.Time]*StatusReport, iP string, templateData *re
 				if !element.Reachable {
 					templateData.Reachable = false
 				}
-				if element.Reboots > 0 {
-					reboots++
-				}
 				compareTime = element.Timestamp.AsTime()
+			}
+			if element.Reboots > 0 {
+				reboots++
 			}
 			usedRAMAvg = usedRAMAvg + element.UsedRAM
 			ramCounter++

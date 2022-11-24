@@ -133,7 +133,7 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers *
 		}
 
 		s := &StatusReport{}
-		if m.Strings["host_id"] != "Hello" {
+		if m.Strings["hostId"] != "Hello" {
 			GetStatusFromMeasure(addr.IP.String(), &m, s, &uptimeMap)
 		} else {
 			Hello(addr.IP.String(), &m, s)
@@ -150,24 +150,22 @@ func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport, uptime
 	s.Tower = ip
 	s.ArduinoReached = time.Now().Add(time.Duration(m.Integers["arduinoReached"])).Format(time.RFC822)
 	s.TowerReached = time.Now().Format(time.RFC822)
+
+	s.BootTime = time.Now().Add(time.Duration(m.Integers["uptime"]) * -1).Format(time.RFC822)
+	fmt.Println("boot time ", s.BootTime)
 	if m.Integers["uptime"] > 0 {
-		fmt.Println("uptime > 0")                    /////////////////
-		fmt.Println("uptime ", m.Integers["uptime"]) /////////////////
-		fmt.Println("uptime map ", (*uptimeMap)[ip]) /////////////////
-		s.BootTime = time.Now().Add(time.Duration(m.Integers["uptime"])).Format(time.RFC822)
 		if (*uptimeMap)[ip] > m.Integers["uptime"] {
 			s.Reboots = 1
 		}
 		(*uptimeMap)[ip] = m.Integers["uptime"]
 	}
-	s.UsedRAM = m.Integers["vm_used"]
-	s.TotalRAM = m.Integers["vm_total"]
-	s.UsedDisk = m.Integers["DISK_USED"]
-	s.TotalDisk = m.Integers["DISK_TOTAL"]
-	s.Cpu = m.Integers["CPU_AVG"]
+	s.UsedRAM = m.Integers["vmUsed"]
+	s.TotalRAM = m.Integers["vmTotal"]
+	s.UsedDisk = m.Integers["diskUsed"]
+	s.TotalDisk = m.Integers["diskTotal"]
+	s.Cpu = m.Integers["cpuAvg"]
 	s.Timestamp = m.Timestamp
 	s.Reachable = true
-	s.Temperature = m.Integers["MQTT_Temp"]
 }
 
 func Hello(ip string, m *measure.Measure, s *StatusReport) {
