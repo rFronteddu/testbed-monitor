@@ -29,12 +29,12 @@ func NewReportReceiver(measureCh chan *measure.Measure, statusCh chan *StatusRep
 	receiver.gqlCh = gqlCh
 	s, err := net.ResolveUDPAddr("udp4", ":"+receivePort)
 	if err != nil {
-		log.Panicf("Unable to resolve address %s\n%s\n", s, err)
+		log.Fatalf("Unable to resolve address %s\n%s\n", s, err)
 		return nil, err
 	}
 	connection, err := net.ListenUDP("udp4", s)
 	if err != nil {
-		log.Panicf("Unable to listen on %s\n%s\n", s, err)
+		log.Fatalf("Unable to listen on %s\n%s\n", s, err)
 		return nil, err
 	}
 	receiver.connection = connection
@@ -148,17 +148,16 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers *
 // GetStatusFromMeasure reads a Measure Report and prepares a Status Report for the app to use later
 func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport, uptimeMap *map[string]int64) {
 	s.Tower = ip
-	s.ArduinoReached = time.Now().Add(time.Duration(m.Integers["arduinoReached"])).Format(time.RFC822)
+	s.ArduinoReached = time.Now().Add(time.Duration(m.Integers["arduinoReached"]) * time.Second).Format(time.RFC822)
 	s.TowerReached = time.Now().Format(time.RFC822)
 
-	s.BootTime = time.Now().Add(time.Duration(m.Integers["uptime"]) * -1).Format(time.RFC822)
-	fmt.Println("boot time ", s.BootTime)
-	if m.Integers["uptime"] > 0 {
-		if (*uptimeMap)[ip] > m.Integers["uptime"] {
-			s.Reboots = 1
-		}
-		(*uptimeMap)[ip] = m.Integers["uptime"]
+	s.BootTime = time.Now().Add(time.Duration(m.Integers["uptime"]) * -1 * time.Second).Format(time.RFC822)
+	fmt.Println("boot time ", s.BootTime) //////////////
+	if m.Integers["uptime"] < (*uptimeMap)[ip] {
+		s.Reboots = 1
 	}
+	(*uptimeMap)[ip] = m.Integers["uptime"]
+	fmt.Println(m.Integers["uptime"]) ///////////////
 	s.UsedRAM = m.Integers["vmUsed"]
 	s.TotalRAM = m.Integers["vmTotal"]
 	s.UsedDisk = m.Integers["diskUsed"]
