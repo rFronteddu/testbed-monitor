@@ -1,7 +1,6 @@
 package report
 
 import (
-	"fmt"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/protobuf/proto"
 	"log"
@@ -29,12 +28,12 @@ func NewReportReceiver(measureCh chan *measure.Measure, statusCh chan *StatusRep
 	receiver.gqlCh = gqlCh
 	s, err := net.ResolveUDPAddr("udp4", ":"+receivePort)
 	if err != nil {
-		log.Panicf("Unable to resolve address %s\n%s\n", s, err)
+		log.Fatalf("Unable to resolve address %s\n%s\n", s, err)
 		return nil, err
 	}
 	connection, err := net.ListenUDP("udp4", s)
 	if err != nil {
-		log.Panicf("Unable to listen on %s\n%s\n", s, err)
+		log.Fatalf("Unable to listen on %s\n%s\n", s, err)
 		return nil, err
 	}
 	receiver.connection = connection
@@ -47,7 +46,6 @@ func (receiver *Receiver) Start(towers *[]string) {
 	replyCh := make(chan *pb.PingReply)
 	var p *pb.PingReply
 	receivedReports := map[string]time.Time{}
-
 	// Go func to receive reports
 	go func() {
 		receiver.receive(receivedReports, towers)
@@ -79,6 +77,7 @@ func (receiver *Receiver) Start(towers *[]string) {
 }
 
 func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers *[]string) {
+	uptimeMap := make(map[string]int64)
 	defer func() {
 		if err := recover(); err != nil {
 			log.Printf("Fatal error while receiving: %s, will sleep 5 seconds before attempting to proceed\n", err)
@@ -123,6 +122,7 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers *
 		}
 		if towerKnown == false {
 			*towers = append(*towers, addr.IP.String())
+			uptimeMap[addr.IP.String()] = 0
 		}
 
 		if m.Strings == nil {
@@ -130,33 +130,43 @@ func (receiver *Receiver) receive(receivedReports map[string]time.Time, towers *
 			m.Strings = make(map[string]string)
 		}
 
-		if m.Strings["host_id"] != "Hello" {
-			s := &StatusReport{}
-			GetStatusFromMeasure(addr.IP.String(), &m, s)
-			receiver.statusCh <- s
-			receiver.gqlCh <- s
+		s := &StatusReport{}
+		if m.Strings["hostId"] != "Hello" {
+			GetStatusFromMeasure(addr.IP.String(), &m, s, &uptimeMap)
+		} else {
+			Hello(addr.IP.String(), &m, s)
 		}
+		receiver.statusCh <- s
+		receiver.gqlCh <- s
 
 		log.Printf("Received report from %s.\nReport: %s\n", addr.IP.String(), m.String())
 	}
 }
 
 // GetStatusFromMeasure reads a Measure Report and prepares a Status Report for the app to use later
-func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport) {
+func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport, uptimeMap *map[string]int64) {
 	s.Tower = ip
-	s.ArduinoReached = time.Now().Add(time.Duration(m.Integers["arduinoReached"])).Format(time.RFC822)
+	s.ArduinoReached = time.Now().Add(time.Duration(m.Integers["arduinoReached"]) * time.Second).Format(time.RFC822)
 	s.TowerReached = time.Now().Format(time.RFC822)
-	if m.Integers["bootTime"] > 0 {
-		s.BootTime = time.Unix(m.Integers["bootTime"], 0).Format(time.RFC822)
-		fmt.Printf("Received boot time: %v\nConverted to: %v\n", m.Integers["bootTime"], s.BootTime)
+	if m.Integers["uptime"] > 0 {
+		s.BootTime = time.Now().Add(time.Duration(m.Integers["uptime"]) * -1 * time.Second).Format(time.RFC822)
 	}
-	s.Reboots = m.Integers["reboot_sensor"]
-	s.UsedRAM = m.Integers["vm_used"]
-	s.TotalRAM = m.Integers["vm_total"]
-	s.UsedDisk = m.Integers["DISK_USED"]
-	s.TotalDisk = m.Integers["DISK_TOTAL"]
-	s.Cpu = m.Integers["CPU_AVG"]
+	if m.Integers["uptime"] < (*uptimeMap)[ip] {
+		s.Reboots = 1
+	}
+	(*uptimeMap)[ip] = m.Integers["uptime"]
+	s.UsedRAM = m.Integers["vmUsed"]
+	s.TotalRAM = m.Integers["vmTotal"]
+	s.UsedDisk = m.Integers["diskUsed"]
+	s.TotalDisk = m.Integers["diskTotal"]
+	s.Cpu = m.Integers["cpuAvg"]
 	s.Timestamp = m.Timestamp
 	s.Reachable = true
-	s.Temperature = m.Integers["MQTT_Temp"]
+}
+
+func Hello(ip string, m *measure.Measure, s *StatusReport) {
+	s.Tower = ip
+	s.TowerReached = time.Now().Format(time.RFC822)
+	s.Timestamp = m.Timestamp
+	s.Reachable = true
 }

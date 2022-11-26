@@ -64,7 +64,7 @@ func loadConfiguration(path string) *Configuration {
 }
 
 func main() {
-	version := "11-1-2022"
+	version := "11-24-2022"
 	fmt.Println("Running software version ", version)
 	file, err := os.OpenFile("./log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
