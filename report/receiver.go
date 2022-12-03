@@ -1,7 +1,6 @@
 package report
 
 import (
-	"fmt"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/protobuf/proto"
 	"log"
@@ -163,7 +162,6 @@ func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport, uptime
 	s.Cpu = m.Integers["cpuAvg"]
 	s.Timestamp = m.Timestamp
 	s.Reachable = true
-	fmt.Printf("%s reboots: %v\n", s.Tower, s.Reboots)
 }
 
 func Hello(ip string, m *measure.Measure, s *StatusReport) {
