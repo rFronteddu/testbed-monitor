@@ -3,6 +3,7 @@ package report
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"reflect"
@@ -249,6 +250,7 @@ func aggregator(reports map[time.Time]*StatusReport, iP string, templateData *re
 			}
 			if element.Reboots > 0 {
 				reboots++
+				fmt.Println("Adding a reboot for the email")
 			}
 			usedRAMAvg = usedRAMAvg + element.UsedRAM
 			ramCounter++
