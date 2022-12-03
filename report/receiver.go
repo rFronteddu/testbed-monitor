@@ -153,8 +153,8 @@ func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport, uptime
 		if m.Integers["uptime"] < (*uptimeMap)[ip] {
 			s.Reboots = 1
 		}
+		(*uptimeMap)[ip] = m.Integers["uptime"]
 	}
-	(*uptimeMap)[ip] = m.Integers["uptime"]
 	s.UsedRAM = m.Integers["vmUsed"]
 	s.TotalRAM = m.Integers["vmTotal"]
 	s.UsedDisk = m.Integers["diskUsed"]
