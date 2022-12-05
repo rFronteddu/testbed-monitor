@@ -150,11 +150,11 @@ func GetStatusFromMeasure(ip string, m *measure.Measure, s *StatusReport, uptime
 	s.TowerReached = time.Now().Format(time.RFC822)
 	if m.Integers["uptime"] > 0 {
 		s.BootTime = time.Now().Add(time.Duration(m.Integers["uptime"]) * -1 * time.Second).Format(time.RFC822)
+		if m.Integers["uptime"] < (*uptimeMap)[ip] {
+			s.Reboots = 1
+		}
+		(*uptimeMap)[ip] = m.Integers["uptime"]
 	}
-	if m.Integers["uptime"] < (*uptimeMap)[ip] {
-		s.Reboots = 1
-	}
-	(*uptimeMap)[ip] = m.Integers["uptime"]
 	s.UsedRAM = m.Integers["vmUsed"]
 	s.TotalRAM = m.Integers["vmTotal"]
 	s.UsedDisk = m.Integers["diskUsed"]

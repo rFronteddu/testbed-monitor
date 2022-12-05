@@ -1,6 +1,6 @@
 # testbed-monitor
 ## Description
-This is the Testbed Monitor app, created by rFronteddu and  cb218. It is a simple component designed to receive and process status reports from a host. The program generates daily and weekly aggregate reports and emails them to the address specified and posts them to the API specified. Notifications related to field value limits can also be configured.
+This is the Testbed Monitor app, created by rFronteddu and cb218. It is a simple component designed to receive and process status reports from a host. The program generates daily and weekly aggregate reports and emails them to the address specified and posts them to the API specified. Notifications related to field value limits can also be configured.
 
 The app is designed to run in conjunction with the **Host Monitor** (https://github.com/rFronteddu/host-monitor) app, another utility created by rFronteddu.
 
@@ -54,12 +54,20 @@ The **traps.json** file should declare the following variables, if notifications
 [{
   "description": "",
   "operator": "",
-    - Currently supported operators are <, >, and =
+    - Supported operators: <, >, or =
   "field": "",
-    - Currently supported fields are Reboots, UsedRAM, UsedDisk, Cpu, and Temperature
+    - All integer fields are supported: Reboots, UsedRAM, UsedDisk, Cpu, and Temperature
   "trigger": "",
   "period": ""
     - Unit: hours
+}]
+```
+If necessary, use **endpoint_mapping.yaml** to map the tower's IP address to its name in the MQTT message. Example:
+```
+[{
+  tower_1: "192.168.101.2"
+  tower_2: "192.168.102.2"
+  ...
 }]
 ```
 

@@ -13,6 +13,7 @@ sudo cp .env /usr/lib/monitor/.env
 sudo cp traps.json /usr/lib/monitor/traps.json
 sudo cp report_template.html /usr/lib/monitor/report_template.html
 sudo cp notification_template.html /usr/lib/monitor/notification_template.html
+sudo cp endpoints_mapping.yaml /usr/lib/monitor/endpoints_mapping.yaml
 sudo cp main /usr/lib/monitor/main
 
 # copy the service to the
